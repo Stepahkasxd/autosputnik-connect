@@ -1,22 +1,7 @@
 import { Header } from "@/components/Header";
 import { ContactForm } from "@/components/ContactForm";
 import { CarCard } from "@/components/CarCard";
-
-const cars = [
-  {
-    id: "zeekr-001",
-    name: "Zeekr 001",
-    price: "от 5 990 000 ₽",
-    image: "/placeholder.svg",
-  },
-  {
-    id: "zeekr-007",
-    name: "Zeekr 007",
-    price: "от 6 290 000 ₽",
-    image: "/placeholder.svg",
-  },
-  // Add more cars here
-];
+import { cars } from "@/data/cars";
 
 const Index = () => {
   return (
@@ -42,7 +27,13 @@ const Index = () => {
           <h2 className="text-3xl font-bold mb-8 text-center">Каталог автомобилей</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {cars.map((car) => (
-              <CarCard key={car.id} {...car} />
+              <CarCard
+                key={car.id}
+                id={car.id}
+                name={car.name}
+                price={car.basePrice}
+                image={car.image}
+              />
             ))}
           </div>
         </section>

@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
+import { MessageSquare, Phone } from "lucide-react";
 
 export const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -60,15 +61,21 @@ export const ContactForm = () => {
             onValueChange={(value) =>
               setFormData({ ...formData, contactMethod: value })
             }
-            className="mt-2"
+            className="mt-2 space-y-2"
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="whatsapp" id="whatsapp" />
-              <Label htmlFor="whatsapp">WhatsApp сообщение</Label>
+              <Label htmlFor="whatsapp" className="flex items-center space-x-2">
+                <MessageSquare className="w-4 h-4" />
+                <span>WhatsApp сообщение</span>
+              </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="phone" id="phone" />
-              <Label htmlFor="phone">Обычный телефонный звонок</Label>
+              <Label htmlFor="phone" className="flex items-center space-x-2">
+                <Phone className="w-4 h-4" />
+                <span>Обычный телефонный звонок</span>
+              </Label>
             </div>
           </RadioGroup>
         </div>
