@@ -144,4 +144,31 @@ export const cars: Car[] = [
       batteryCapacity: "52,3 кВт⋅ч",
     },
   },
+  {
+    id: "lixiang-l7",
+    name: "Lixiang L7",
+    basePrice: "от 5 290 000 ₽",
+    image: "/placeholder.svg",
+    colors: [
+      { name: "Черный", code: "#000000" },
+      { name: "Белый", code: "#FFFFFF" },
+      { name: "Серый", code: "#808080" },
+      { name: "Серебристый", code: "#C0C0C0" },
+    ],
+    interiors: [
+      { name: "Кожа черная" },
+      { name: "Кожа бежевая" },
+      { name: "Серо-белая" },
+    ],
+    trims: [
+      { name: "L7 Air", price: "5 290 000 ₽" },
+      { name: "L7 Pro", price: "5 790 000 ₽" },
+      { name: "L7 Max", price: "6 290 000 ₽" },
+    ],
+    specs: {
+      dimensions: "5050 мм",
+      wheelbase: "3100 мм",
+      power: "449 л.с.",
+    },
+  },
 ];
