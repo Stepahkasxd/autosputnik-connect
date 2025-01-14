@@ -91,4 +91,32 @@ export const cars: Car[] = [
       additionalFeatures: ["19\" многоспицевые диски"],
     },
   },
+  {
+    id: "zeekr-009",
+    name: "Zeekr 009",
+    basePrice: "от 7 290 000 ₽",
+    image: "/placeholder.svg",
+    colors: [
+      { name: "Черный", code: "#000000" },
+      { name: "Оливковый", code: "#556B2F" },
+      { name: "Серый", code: "#8E9196" },
+      { name: "Белый", code: "#FFFFFF" },
+    ],
+    interiors: [
+      { name: "Белый" },
+      { name: "Черный" },
+      { name: "Черно-белый" },
+    ],
+    trims: [
+      { name: "ZEEKR YOU (4-местный)", price: "7 290 000 ₽" },
+      { name: "ZEEKR YOU (5-местный)", price: "7 490 000 ₽" },
+      { name: "ZEEKR ME", price: "7 990 000 ₽" },
+    ],
+    specs: {
+      drive: "Полный привод 4WD",
+      range: "700 км",
+      acceleration: "4,5 с до 100 км/ч",
+      power: "400 кВт",
+    },
+  },
 ];
