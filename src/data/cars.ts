@@ -196,4 +196,29 @@ export const cars: Car[] = [
       power: "449 л.с.",
     },
   },
+  {
+    id: "lixiang-mega",
+    name: "Lixiang Mega",
+    basePrice: "от 6 790 000 ₽",
+    image: "/placeholder.svg",
+    colors: [
+      { name: "Белый", code: "#FFFFFF" },
+      { name: "Серый", code: "#8E9196" },
+      { name: "Черный", code: "#000000" },
+    ],
+    interiors: [
+      { name: "Черный" },
+      { name: "Серо-белый" },
+    ],
+    trims: [
+      { name: "Base", price: "6 790 000 ₽" },
+      { name: "Pro", price: "7 290 000 ₽" },
+      { name: "Ultra", price: "7 790 000 ₽" },
+    ],
+    specs: {
+      power: "517 л.с.",
+      range: "900 км",
+      acceleration: "4.9 с до 100 км/ч",
+    },
+  },
 ];
