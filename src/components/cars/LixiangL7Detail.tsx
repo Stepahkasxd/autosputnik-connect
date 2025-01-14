@@ -2,7 +2,7 @@ import { Car } from "@/data/cars";
 import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { RulerHorizontal, Gauge, Car as CarIcon } from "lucide-react";
+import { ArrowRight, Gauge, Car as CarIcon } from "lucide-react";
 
 interface LixiangL7DetailProps {
   car: Car;
@@ -80,7 +80,7 @@ const LixiangL7Detail = ({ car }: LixiangL7DetailProps) => {
         <h2 className="text-2xl font-semibold">Характеристики</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="flex items-center gap-3">
-            <RulerHorizontal className="w-8 h-8 text-blue-500" />
+            <ArrowRight className="w-8 h-8 text-blue-500" />
             <div>
               <p className="text-sm text-gray-600">Длина</p>
               <p className="font-semibold">{car.specs.dimensions}</p>

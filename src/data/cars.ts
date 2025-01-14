@@ -19,6 +19,8 @@ export interface CarSpecs {
   power: string;
   batteryCapacity?: string;
   additionalFeatures?: string[];
+  dimensions?: string;
+  wheelbase?: string;
 }
 
 export interface Car {
