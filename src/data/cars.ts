@@ -171,6 +171,29 @@ export const cars: Car[] = [
       dimensions: "5050 мм",
       wheelbase: "3100 мм",
       power: "449 л.с.",
+      acceleration: "5.3 с до 100 км/ч",
+    },
+  },
+  {
+    id: "lixiang-l9",
+    name: "Lixiang L9",
+    basePrice: "от 6 990 000 ₽",
+    image: "/placeholder.svg",
+    colors: [
+      { name: "Золотистый металлик", code: "#CFB53B" },
+      { name: "Серебристый металлик", code: "#C0C0C0" },
+    ],
+    interiors: [
+      { name: "Черный" },
+      { name: "Белый" },
+    ],
+    trims: [
+      { name: "L9 Max", price: "7 290 000 ₽" },
+      { name: "L9 Pro", price: "6 990 000 ₽" },
+    ],
+    specs: {
+      acceleration: "5.3 с до 100 км/ч",
+      power: "449 л.с.",
     },
   },
 ];

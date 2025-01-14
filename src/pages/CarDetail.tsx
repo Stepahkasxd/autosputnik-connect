@@ -6,6 +6,7 @@ import Zeekr007Detail from "@/components/cars/Zeekr007Detail";
 import Zeekr009Detail from "@/components/cars/Zeekr009Detail";
 import LixiangL6Detail from "@/components/cars/LixiangL6Detail";
 import LixiangL7Detail from "@/components/cars/LixiangL7Detail";
+import LixiangL9Detail from "@/components/cars/LixiangL9Detail";
 
 const CarDetail = () => {
   const { id } = useParams();
@@ -22,6 +23,7 @@ const CarDetail = () => {
       {car.id === "zeekr-009" && <Zeekr009Detail car={car} />}
       {car.id === "lixiang-l6" && <LixiangL6Detail car={car} />}
       {car.id === "lixiang-l7" && <LixiangL7Detail car={car} />}
+      {car.id === "lixiang-l9" && <LixiangL9Detail car={car} />}
     </div>
   );
 };
