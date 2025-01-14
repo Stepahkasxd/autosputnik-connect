@@ -13,10 +13,11 @@ export interface CarTrim {
 }
 
 export interface CarSpecs {
-  drive: string;
+  drive?: string;
   range?: string;
   acceleration: string;
   power: string;
+  batteryCapacity?: string;
   additionalFeatures?: string[];
 }
 
@@ -117,6 +118,30 @@ export const cars: Car[] = [
       range: "700 км",
       acceleration: "4,5 с до 100 км/ч",
       power: "400 кВт",
+    },
+  },
+  {
+    id: "lixiang-l6",
+    name: "Lixiang L6",
+    basePrice: "от 4 990 000 ₽",
+    image: "/placeholder.svg",
+    colors: [
+      { name: "Бежевый", code: "#E8DCC4" },
+      { name: "Серый", code: "#808080" },
+      { name: "Черный", code: "#000000" },
+    ],
+    interiors: [
+      { name: "Белый" },
+      { name: "Черный" },
+    ],
+    trims: [
+      { name: "L6 PRO", price: "4 990 000 ₽" },
+      { name: "L6 MAX", price: "5 490 000 ₽" },
+    ],
+    specs: {
+      acceleration: "6,5 с до 100 км/ч",
+      power: "408 л.с.",
+      batteryCapacity: "52,3 кВт⋅ч",
     },
   },
 ];
