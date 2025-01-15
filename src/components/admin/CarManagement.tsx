@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { cars } from "@/data/cars";
@@ -21,28 +20,104 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { CarSpecs } from "@/data/cars";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL || "",
+  process.env.SUPABASE_ANON_KEY || ""
+);
 
 export const CarManagement = () => {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<any>(null);
+  const [specs, setSpecs] = useState<CarSpecs>({
+    acceleration: "",
+    power: "",
+    drive: "",
+    range: "",
+    batteryCapacity: "",
+    dimensions: "",
+    wheelbase: "",
+    additionalFeatures: [],
+  });
 
-  const handleSave = (event: React.FormEvent) => {
+  const handleSpecChange = (field: keyof CarSpecs, value: string) => {
+    setSpecs((prev) => ({
+      ...prev,
+      [field]: field === "additionalFeatures" ? value.split(",") : value,
+    }));
+  };
+
+  const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
-    toast({
-      title: selectedCar ? "Автомобиль обновлен" : "Автомобиль добавлен",
-      description: "Изменения успешно сохранены",
-    });
-    setIsDialogOpen(false);
+    const formData = new FormData(event.target as HTMLFormElement);
+    const carData = {
+      name: formData.get("name"),
+      basePrice: formData.get("price"),
+      specs: specs,
+    };
+
+    try {
+      if (selectedCar) {
+        await supabase
+          .from("cars")
+          .update(carData)
+          .eq("id", selectedCar.id);
+      } else {
+        await supabase.from("cars").insert([carData]);
+      }
+
+      const imageFile = formData.get("image") as File;
+      if (imageFile && imageFile.size > 0) {
+        const fileName = `${Date.now()}-${imageFile.name}`;
+        await supabase.storage
+          .from("car-images")
+          .upload(fileName, imageFile);
+      }
+
+      toast({
+        title: selectedCar ? "Автомобиль обновлен" : "Автомобиль добавлен",
+        description: "Изменения успешно сохранены",
+      });
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error saving car:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось сохранить изменения",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDelete = (id: string) => {
-    console.log("Deleting car:", id);
-    toast({
-      title: "Автомобиль удален",
-      description: "Автомобиль был успешно удален из каталога",
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await supabase.from("cars").delete().eq("id", id);
+      toast({
+        title: "Автомобиль удален",
+        description: "Автомобиль был успешно удален из каталога",
+      });
+    } catch (error) {
+      console.error("Error deleting car:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить автомобиль",
+        variant: "destructive",
+      });
+    }
   };
+
+  const specFields = [
+    { key: "acceleration", label: "Разгон до 100 км/ч", placeholder: "Например: 3.8 с" },
+    { key: "power", label: "Мощность", placeholder: "Например: 400 кВт или 517 л.с." },
+    { key: "drive", label: "Привод", placeholder: "Например: Полный привод 4WD" },
+    { key: "range", label: "Запас хода", placeholder: "Например: 656 км" },
+    { key: "batteryCapacity", label: "Емкость батареи", placeholder: "Например: 52.3 кВт⋅ч" },
+    { key: "dimensions", label: "Габариты", placeholder: "Например: 5050 мм" },
+    { key: "wheelbase", label: "Колесная база", placeholder: "Например: 3100 мм" },
+  ];
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -50,12 +125,24 @@ export const CarManagement = () => {
         <h2 className="text-xl font-semibold">Управление автомобилями</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setSelectedCar(null)}>
+            <Button onClick={() => {
+              setSelectedCar(null);
+              setSpecs({
+                acceleration: "",
+                power: "",
+                drive: "",
+                range: "",
+                batteryCapacity: "",
+                dimensions: "",
+                wheelbase: "",
+                additionalFeatures: [],
+              });
+            }}>
               <Plus className="h-4 w-4 mr-2" />
               Добавить автомобиль
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {selectedCar ? "Редактировать автомобиль" : "Добавить автомобиль"}
@@ -65,29 +152,69 @@ export const CarManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Название модели</Label>
-                  <Input id="name" defaultValue={selectedCar?.name} required />
+                  <Input 
+                    id="name" 
+                    name="name"
+                    defaultValue={selectedCar?.name} 
+                    required 
+                    placeholder="Например: Zeekr 001"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="price">Базовая цена</Label>
-                  <Input id="price" defaultValue={selectedCar?.basePrice} required />
+                  <Input 
+                    id="price" 
+                    name="price"
+                    defaultValue={selectedCar?.basePrice} 
+                    required 
+                    placeholder="Например: от 5 990 000 ₽"
+                  />
                 </div>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="image">Фотография</Label>
-                <Input id="image" type="file" accept="image/*" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="specs">Характеристики</Label>
-                <Textarea
-                  id="specs"
-                  defaultValue={JSON.stringify(selectedCar?.specs, null, 2)}
-                  rows={5}
+                <Label htmlFor="image">Фотография автомобиля</Label>
+                <Input 
+                  id="image" 
+                  name="image"
+                  type="file" 
+                  accept="image/*" 
                 />
               </div>
 
-              <div className="flex justify-end space-x-2">
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-medium mb-4">Характеристики автомобиля</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {specFields.map(({ key, label, placeholder }) => (
+                    <div key={key} className="space-y-2">
+                      <Label htmlFor={key}>{label}</Label>
+                      <Input
+                        id={key}
+                        value={specs[key as keyof CarSpecs] as string}
+                        onChange={(e) => handleSpecChange(key as keyof CarSpecs, e.target.value)}
+                        placeholder={placeholder}
+                      />
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="space-y-2 mt-4">
+                  <Label htmlFor="additionalFeatures">
+                    Дополнительные характеристики
+                    <span className="text-sm text-gray-500 block">
+                      Введите характеристики через запятую
+                    </span>
+                  </Label>
+                  <Input
+                    id="additionalFeatures"
+                    value={specs.additionalFeatures?.join(", ") || ""}
+                    onChange={(e) => handleSpecChange("additionalFeatures", e.target.value)}
+                    placeholder='Например: 21" Air Vortex диски, Панорамная крыша'
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Отмена
                 </Button>
@@ -118,6 +245,7 @@ export const CarManagement = () => {
                     size="icon"
                     onClick={() => {
                       setSelectedCar(car);
+                      setSpecs(car.specs);
                       setIsDialogOpen(true);
                     }}
                   >
