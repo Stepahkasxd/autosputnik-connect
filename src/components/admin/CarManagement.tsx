@@ -21,17 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CarSpecs } from "@/data/cars";
-import { createClient } from "@supabase/supabase-js";
-
-// Initialize Supabase client with type safety
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Supabase credentials are not properly configured');
-}
-
-const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+import { supabase } from "@/integrations/supabase/client";
 
 export const CarManagement = () => {
   const { toast } = useToast();
@@ -271,4 +261,3 @@ export const CarManagement = () => {
       </Table>
     </div>
   );
-};
