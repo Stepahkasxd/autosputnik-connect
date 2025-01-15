@@ -39,6 +39,36 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_submissions: {
+        Row: {
+          car_preferences: string
+          contact_method: string
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          timing: string
+        }
+        Insert: {
+          car_preferences: string
+          contact_method: string
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+          timing: string
+        }
+        Update: {
+          car_preferences?: string
+          contact_method?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          timing?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

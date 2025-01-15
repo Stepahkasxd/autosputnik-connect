@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
 import { MessageSquare, Phone } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 type Step = "welcome" | "name" | "car" | "timing" | "contact";
 
@@ -26,23 +27,44 @@ export const ContactForm = () => {
     contactMethod: "whatsapp"
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    toast({
-      title: "Форма отправлена",
-      description: "Виктория свяжется с вами в ближайшее время",
-    });
-    // Reset form
-    setStep("welcome");
-    setMessages([messages[0]]);
-    setFormData({
-      name: "",
-      carPreferences: "",
-      timing: "",
-      phone: "",
-      contactMethod: "whatsapp"
-    });
+    try {
+      const { error } = await supabase
+        .from('contact_submissions')
+        .insert([{
+          name: formData.name,
+          car_preferences: formData.carPreferences,
+          timing: formData.timing,
+          phone: formData.phone,
+          contact_method: formData.contactMethod
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Форма отправлена",
+        description: "Виктория свяжется с вами в ближайшее время",
+      });
+      
+      // Reset form
+      setStep("welcome");
+      setMessages([messages[0]]);
+      setFormData({
+        name: "",
+        carPreferences: "",
+        timing: "",
+        phone: "",
+        contactMethod: "whatsapp"
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось отправить форму. Пожалуйста, попробуйте позже.",
+        variant: "destructive"
+      });
+    }
   };
 
   const addMessage = (text: string, isUser = false) => {

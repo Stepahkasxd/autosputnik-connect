@@ -1,23 +1,69 @@
+import { useEffect, useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Submission {
+  id: string;
+  name: string;
+  car_preferences: string;
+  timing: string;
+  phone: string;
+  contact_method: string;
+  created_at: string;
+}
 
 export const ContactSubmissions = () => {
   const { toast } = useToast();
-  
-  // Mock data - replace with actual data from your backend
-  const submissions = [
-    { id: 1, name: "Иван Петров", email: "ivan@example.com", message: "Интересует Zeekr 001", date: "2024-02-20" },
-    { id: 2, name: "Анна Иванова", email: "anna@example.com", message: "Хочу тест-драйв", date: "2024-02-19" },
-  ];
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
 
-  const handleDelete = (id: number) => {
-    console.log("Deleting submission:", id);
-    toast({
-      title: "Заявка удалена",
-      description: `Заявка #${id} была успешно удалена`,
-    });
+  const fetchSubmissions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('contact_submissions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSubmissions(data || []);
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить заявки",
+        variant: "destructive"
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('contact_submissions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setSubmissions(prev => prev.filter(submission => submission.id !== id));
+      toast({
+        title: "Заявка удалена",
+        description: "Заявка была успешно удалена",
+      });
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить заявку",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -29,18 +75,24 @@ export const ContactSubmissions = () => {
           <TableRow>
             <TableHead>Дата</TableHead>
             <TableHead>Имя</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Сообщение</TableHead>
+            <TableHead>Предпочтения</TableHead>
+            <TableHead>Планируемая дата</TableHead>
+            <TableHead>Телефон</TableHead>
+            <TableHead>Способ связи</TableHead>
             <TableHead>Действия</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {submissions.map((submission) => (
             <TableRow key={submission.id}>
-              <TableCell>{submission.date}</TableCell>
+              <TableCell>{new Date(submission.created_at).toLocaleDateString()}</TableCell>
               <TableCell>{submission.name}</TableCell>
-              <TableCell>{submission.email}</TableCell>
-              <TableCell>{submission.message}</TableCell>
+              <TableCell>{submission.car_preferences}</TableCell>
+              <TableCell>{new Date(submission.timing).toLocaleDateString()}</TableCell>
+              <TableCell>{submission.phone}</TableCell>
+              <TableCell>
+                {submission.contact_method === 'whatsapp' ? 'WhatsApp' : 'Телефон'}
+              </TableCell>
               <TableCell>
                 <Button
                   variant="destructive"
