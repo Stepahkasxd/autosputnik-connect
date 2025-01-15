@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { cars } from "@/data/cars";
 import {
   Dialog,
@@ -23,10 +23,15 @@ import {
 import { CarSpecs } from "@/data/cars";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || "",
-  process.env.SUPABASE_ANON_KEY || ""
-);
+// Initialize Supabase client with type safety
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase credentials are not properly configured');
+}
+
+const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
 
 export const CarManagement = () => {
   const { toast } = useToast();
