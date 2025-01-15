@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { CarSpecs } from "@/data/cars";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export const CarManagement = () => {
   const { toast } = useToast();
@@ -51,10 +52,22 @@ export const CarManagement = () => {
     const name = formData.get("name")?.toString() || "";
     const basePrice = formData.get("price")?.toString() || "";
     
+    // Convert CarSpecs to Json type
+    const specsAsJson: Json = {
+      acceleration: specs.acceleration,
+      power: specs.power,
+      drive: specs.drive,
+      range: specs.range,
+      batteryCapacity: specs.batteryCapacity,
+      dimensions: specs.dimensions,
+      wheelbase: specs.wheelbase,
+      additionalFeatures: specs.additionalFeatures,
+    };
+
     const carData = {
       name,
       base_price: basePrice,
-      specs: specs,
+      specs: specsAsJson,
     };
 
     try {
