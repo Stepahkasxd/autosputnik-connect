@@ -48,9 +48,12 @@ export const CarManagement = () => {
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
     const formData = new FormData(event.target as HTMLFormElement);
+    const name = formData.get("name")?.toString() || "";
+    const basePrice = formData.get("price")?.toString() || "";
+    
     const carData = {
-      name: formData.get("name"),
-      basePrice: formData.get("price"),
+      name,
+      base_price: basePrice,
       specs: specs,
     };
 
@@ -160,7 +163,7 @@ export const CarManagement = () => {
                   <Input 
                     id="price" 
                     name="price"
-                    defaultValue={selectedCar?.basePrice} 
+                    defaultValue={selectedCar?.base_price} 
                     required 
                     placeholder="Например: от 5 990 000 ₽"
                   />
