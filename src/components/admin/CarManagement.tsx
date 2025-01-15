@@ -261,3 +261,6 @@ export const CarManagement = () => {
       </Table>
     </div>
   );
+};
+
+export default CarManagement;
