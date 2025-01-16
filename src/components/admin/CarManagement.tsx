@@ -12,13 +12,43 @@ import {
 } from "@/components/ui/dialog";
 import { CarForm } from "./CarForm";
 import { CarsTable } from "./CarsTable";
-import { Car } from "@/data/cars";
+import { Car, CarSpecs } from "@/data/cars";
+import { Json } from "@/integrations/supabase/types";
 
 export const CarManagement = () => {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [cars, setCars] = useState<Car[]>([]);
+
+  const convertJsonToCarSpecs = (specs: Json): CarSpecs => {
+    if (typeof specs !== 'object' || !specs) {
+      console.error('Invalid specs format:', specs);
+      return {
+        acceleration: "",
+        power: "",
+        drive: "",
+        range: "",
+        batteryCapacity: "",
+        dimensions: "",
+        wheelbase: "",
+        additionalFeatures: [],
+      };
+    }
+
+    return {
+      acceleration: (specs as any).acceleration || "",
+      power: (specs as any).power || "",
+      drive: (specs as any).drive || "",
+      range: (specs as any).range || "",
+      batteryCapacity: (specs as any).batteryCapacity || "",
+      dimensions: (specs as any).dimensions || "",
+      wheelbase: (specs as any).wheelbase || "",
+      additionalFeatures: Array.isArray((specs as any).additionalFeatures) 
+        ? (specs as any).additionalFeatures 
+        : [],
+    };
+  };
 
   const fetchCars = async () => {
     try {
@@ -29,16 +59,18 @@ export const CarManagement = () => {
       if (error) throw error;
       
       if (data) {
-        setCars(data.map(car => ({
+        const convertedCars: Car[] = data.map(car => ({
           id: car.id,
           name: car.name,
           basePrice: car.base_price,
           image: car.image_url || "/placeholder.svg",
-          specs: car.specs,
+          specs: convertJsonToCarSpecs(car.specs),
           colors: [],
           interiors: [],
           trims: []
-        })));
+        }));
+        
+        setCars(convertedCars);
       }
     } catch (error) {
       console.error("Error fetching cars:", error);
