@@ -153,6 +153,7 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
     const name = formData.get("name")?.toString() || "";
     const basePrice = formData.get("price")?.toString() || "";
     
+    // Convert CarSpecs to Json type
     const specsAsJson: Json = {
       acceleration: specs.acceleration,
       power: specs.power,
@@ -203,7 +204,6 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
         for (const color of validColors) {
           let imageUrl = color.imageUrl;
           
-          // Загружаем новое изображение если оно есть
           if (color.imageFile) {
             const fileName = `${carId}-${color.name}-${Date.now()}`;
             const { data: uploadData, error: uploadError } = await supabase.storage
@@ -243,14 +243,25 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
         // Добавляем новые комплектации с характеристиками
         const validTrims = trims.filter(t => t.name && t.price);
         if (validTrims.length > 0) {
+          const trimsToInsert = validTrims.map(trim => ({
+            car_id: carId,
+            name: trim.name,
+            price: trim.price,
+            specs: {
+              acceleration: trim.specs.acceleration,
+              power: trim.specs.power,
+              drive: trim.specs.drive,
+              range: trim.specs.range,
+              batteryCapacity: trim.specs.batteryCapacity,
+              dimensions: trim.specs.dimensions,
+              wheelbase: trim.specs.wheelbase,
+              additionalFeatures: trim.specs.additionalFeatures,
+            } as Json,
+          }));
+
           await supabase
             .from("car_trims")
-            .insert(validTrims.map(trim => ({
-              car_id: carId,
-              name: trim.name,
-              price: trim.price,
-              specs: trim.specs,
-            })));
+            .insert(trimsToInsert);
         }
       }
 
