@@ -9,6 +9,70 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      car_colors: {
+        Row: {
+          car_id: string
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          car_id: string
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          car_id?: string
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_colors_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      car_trims: {
+        Row: {
+          car_id: string
+          created_at: string
+          id: string
+          name: string
+          price: string
+        }
+        Insert: {
+          car_id: string
+          created_at?: string
+          id?: string
+          name: string
+          price: string
+        }
+        Update: {
+          car_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          price?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "car_trims_car_id_fkey"
+            columns: ["car_id"]
+            isOneToOne: false
+            referencedRelation: "cars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cars: {
         Row: {
           base_price: string
