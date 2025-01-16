@@ -15,6 +15,7 @@ export type Database = {
           code: string
           created_at: string
           id: string
+          image_url: string | null
           name: string
         }
         Insert: {
@@ -22,6 +23,7 @@ export type Database = {
           code: string
           created_at?: string
           id?: string
+          image_url?: string | null
           name: string
         }
         Update: {
@@ -29,6 +31,7 @@ export type Database = {
           code?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           name?: string
         }
         Relationships: [
@@ -48,6 +51,7 @@ export type Database = {
           id: string
           name: string
           price: string
+          specs: Json
         }
         Insert: {
           car_id: string
@@ -55,6 +59,7 @@ export type Database = {
           id?: string
           name: string
           price: string
+          specs?: Json
         }
         Update: {
           car_id?: string
@@ -62,6 +67,7 @@ export type Database = {
           id?: string
           name?: string
           price?: string
+          specs?: Json
         }
         Relationships: [
           {

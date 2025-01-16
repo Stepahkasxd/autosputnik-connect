@@ -18,11 +18,14 @@ interface CarFormProps {
 interface ColorInput {
   name: string;
   code: string;
+  imageFile?: File;
+  imageUrl?: string;
 }
 
 interface TrimInput {
   name: string;
   price: string;
+  specs: CarSpecs;
 }
 
 export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
@@ -42,7 +45,22 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
 
   const [disabledSpecs, setDisabledSpecs] = useState<Record<string, boolean>>({});
   const [colors, setColors] = useState<ColorInput[]>([{ name: "", code: "" }]);
-  const [trims, setTrims] = useState<TrimInput[]>([{ name: "", price: "" }]);
+  const [trims, setTrims] = useState<TrimInput[]>([
+    { 
+      name: "", 
+      price: "", 
+      specs: {
+        acceleration: "",
+        power: "",
+        drive: "",
+        range: "",
+        batteryCapacity: "",
+        dimensions: "",
+        wheelbase: "",
+        additionalFeatures: [],
+      }
+    }
+  ]);
 
   const handleSpecChange = (field: keyof CarSpecs, value: string) => {
     setSpecs((prev) => ({
@@ -77,24 +95,56 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
     setColors(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateColor = (index: number, field: keyof ColorInput, value: string) => {
+  const updateColor = (index: number, field: keyof ColorInput, value: string | File) => {
     setColors(prev => prev.map((color, i) => 
       i === index ? { ...color, [field]: value } : color
     ));
   };
 
+  const handleColorImageChange = async (index: number, file: File) => {
+    updateColor(index, 'imageFile', file);
+  };
+
   const addTrim = () => {
-    setTrims(prev => [...prev, { name: "", price: "" }]);
+    setTrims(prev => [...prev, { 
+      name: "", 
+      price: "", 
+      specs: {
+        acceleration: "",
+        power: "",
+        drive: "",
+        range: "",
+        batteryCapacity: "",
+        dimensions: "",
+        wheelbase: "",
+        additionalFeatures: [],
+      }
+    }]);
   };
 
   const removeTrim = (index: number) => {
     setTrims(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateTrim = (index: number, field: keyof TrimInput, value: string) => {
+  const updateTrim = (index: number, field: keyof TrimInput, value: string | CarSpecs) => {
     setTrims(prev => prev.map((trim, i) => 
       i === index ? { ...trim, [field]: value } : trim
     ));
+  };
+
+  const handleTrimSpecChange = (trimIndex: number, field: keyof CarSpecs, value: string) => {
+    setTrims(prev => prev.map((trim, i) => {
+      if (i === trimIndex) {
+        return {
+          ...trim,
+          specs: {
+            ...trim.specs,
+            [field]: field === "additionalFeatures" ? value.split(",") : value,
+          }
+        };
+      }
+      return trim;
+    }));
   };
 
   const handleSave = async (event: React.FormEvent) => {
@@ -139,7 +189,6 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
         carId = carData?.id;
       }
 
-      // Сохраняем цвета
       if (carId) {
         // Удаляем старые цвета если редактируем
         if (selectedCar) {
@@ -149,16 +198,38 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
             .eq("car_id", carId);
         }
         
-        // Добавляем новые цвета
+        // Добавляем новые цвета и загружаем изображения
         const validColors = colors.filter(c => c.name && c.code);
-        if (validColors.length > 0) {
+        for (const color of validColors) {
+          let imageUrl = color.imageUrl;
+          
+          // Загружаем новое изображение если оно есть
+          if (color.imageFile) {
+            const fileName = `${carId}-${color.name}-${Date.now()}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from("car-color-images")
+              .upload(fileName, color.imageFile);
+
+            if (uploadError) {
+              console.error("Error uploading color image:", uploadError);
+              continue;
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+              .from("car-color-images")
+              .getPublicUrl(fileName);
+
+            imageUrl = publicUrl;
+          }
+
           await supabase
             .from("car_colors")
-            .insert(validColors.map(color => ({
+            .insert({
               car_id: carId,
               name: color.name,
               code: color.code,
-            })));
+              image_url: imageUrl,
+            });
         }
 
         // Удаляем старые комплектации если редактируем
@@ -169,7 +240,7 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
             .eq("car_id", carId);
         }
 
-        // Добавляем новые комплектации
+        // Добавляем новые комплектации с характеристиками
         const validTrims = trims.filter(t => t.name && t.price);
         if (validTrims.length > 0) {
           await supabase
@@ -178,6 +249,7 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
               car_id: carId,
               name: trim.name,
               price: trim.price,
+              specs: trim.specs,
             })));
         }
       }
@@ -279,6 +351,19 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
                   />
                 </div>
               </div>
+              <div className="flex-1">
+                <Label>Фото автомобиля в этом цвете</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      handleColorImageChange(index, file);
+                    }
+                  }}
+                />
+              </div>
               <Button
                 type="button"
                 variant="ghost"
@@ -305,33 +390,67 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
       <div className="border-t pt-4">
         <h3 className="text-lg font-medium mb-4">Комплектации</h3>
         <div className="space-y-4">
-          {trims.map((trim, index) => (
-            <div key={index} className="flex gap-4 items-start">
-              <div className="flex-1">
-                <Label>Название комплектации</Label>
-                <Input
-                  value={trim.name}
-                  onChange={(e) => updateTrim(index, "name", e.target.value)}
-                  placeholder="Например: Базовая"
-                />
+          {trims.map((trim, trimIndex) => (
+            <div key={trimIndex} className="space-y-4 border p-4 rounded-lg">
+              <div className="flex gap-4 items-start">
+                <div className="flex-1">
+                  <Label>Название комплектации</Label>
+                  <Input
+                    value={trim.name}
+                    onChange={(e) => updateTrim(trimIndex, "name", e.target.value)}
+                    placeholder="Например: Базовая"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label>Цена</Label>
+                  <Input
+                    value={trim.price}
+                    onChange={(e) => updateTrim(trimIndex, "price", e.target.value)}
+                    placeholder="Например: 5 990 000 ₽"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="mt-6"
+                  onClick={() => removeTrim(trimIndex)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
-              <div className="flex-1">
-                <Label>Цена</Label>
-                <Input
-                  value={trim.price}
-                  onChange={(e) => updateTrim(index, "price", e.target.value)}
-                  placeholder="Например: 5 990 000 ₽"
-                />
+              
+              <div className="space-y-4">
+                <h4 className="text-md font-medium">Характеристики комплектации</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {specFields.map(({ key, label, placeholder }) => (
+                    <div key={key} className="space-y-2">
+                      <Label htmlFor={`trim-${trimIndex}-${key}`}>{label}</Label>
+                      <Input
+                        id={`trim-${trimIndex}-${key}`}
+                        value={trim.specs[key as keyof CarSpecs] as string}
+                        onChange={(e) => handleTrimSpecChange(trimIndex, key as keyof CarSpecs, e.target.value)}
+                        placeholder={placeholder}
+                      />
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor={`trim-${trimIndex}-additionalFeatures`}>
+                    Дополнительные характеристики
+                    <span className="text-sm text-gray-500 block">
+                      Введите характеристики через запятую
+                    </span>
+                  </Label>
+                  <Input
+                    id={`trim-${trimIndex}-additionalFeatures`}
+                    value={trim.specs.additionalFeatures?.join(", ") || ""}
+                    onChange={(e) => handleTrimSpecChange(trimIndex, "additionalFeatures", e.target.value)}
+                    placeholder='Например: 21" Air Vortex диски, Панорамная крыша'
+                  />
+                </div>
               </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="mt-6"
-                onClick={() => removeTrim(index)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
             </div>
           ))}
           <Button
@@ -347,7 +466,7 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
       </div>
 
       <div className="border-t pt-4">
-        <h3 className="text-lg font-medium mb-4">Характеристики автомобиля</h3>
+        <h3 className="text-lg font-medium mb-4">Базовые характеристики автомобиля</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {specFields.map(({ key, label, placeholder }) => (
             <div key={key} className="space-y-2">
