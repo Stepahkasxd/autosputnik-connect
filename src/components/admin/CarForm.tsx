@@ -8,6 +8,7 @@ import { BasicInfoSection } from "./car-form/BasicInfoSection";
 import { ColorsSection } from "./car-form/ColorsSection";
 import { SpecsSection } from "./car-form/SpecsSection";
 import { TrimsSection } from "./car-form/TrimsSection";
+import { useNavigate } from "react-router-dom";
 
 interface CarFormProps {
   selectedCar?: any;
@@ -56,6 +57,7 @@ const clearStoredFormData = () => {
 
 export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [formKey, setFormKey] = useState(Date.now());
   const [specs, setSpecs] = useState<CarSpecs>(
     selectedCar?.specs || getStoredFormData()?.specs || {
@@ -172,16 +174,17 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    // Check authentication status
-    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    // Check authentication status from localStorage instead of Supabase session
+    const isAuthenticated = localStorage.getItem("isAdminAuthenticated") === "true";
     
-    if (authError || !session) {
-      console.error("Authentication error:", authError);
+    if (!isAuthenticated) {
+      console.error("Not authenticated");
       toast({
         title: "Ошибка аутентификации",
         description: "Пожалуйста, войдите в систему",
         variant: "destructive",
       });
+      navigate("/admin/login");
       return;
     }
 
@@ -202,7 +205,7 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
 
     try {
       console.log("Starting car save process...");
-      console.log("User is authenticated:", session.user.id);
+      console.log("User is authenticated:", isAuthenticated);
       
       let carId;
       if (selectedCar) {
