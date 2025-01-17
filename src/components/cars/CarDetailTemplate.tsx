@@ -5,9 +5,23 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Battery, Car as CarIcon, Gauge, Timer, Zap, CheckCircle2, Sparkles, ArrowLeft } from "lucide-react";
+import { 
+  Battery, 
+  Car as CarIcon, 
+  Gauge, 
+  Timer, 
+  Zap, 
+  CheckCircle2, 
+  Sparkles, 
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 interface CarDetailTemplateProps {
   car: Car;
@@ -19,6 +33,16 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
   const [selectedInterior, setSelectedInterior] = useState(car?.interiors[0]?.name);
   const [selectedTrim, setSelectedTrim] = useState(car?.trims[0]);
   const [currentImage, setCurrentImage] = useState(car?.image);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Collect all available images
+  const allImages = [
+    car.image,
+    ...car.colors
+      .map(color => color.image_url)
+      .filter((url): url is string => url !== undefined && url !== null)
+  ];
 
   useEffect(() => {
     console.log("Selected color changed:", selectedColor);
@@ -31,13 +55,25 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
     }
   }, [selectedColor, car.image]);
 
+  const handleBack = () => {
+    navigate(-1);
+  };
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => 
+      prev === allImages.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const previousImage = () => {
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? allImages.length - 1 : prev - 1
+    );
+  };
+
   // Helper function to check if a spec exists and has a value
   const hasSpec = (spec: string | undefined | null): boolean => {
     return spec !== undefined && spec !== null && spec !== '';
-  };
-
-  const handleBack = () => {
-    navigate(-1);
   };
 
   return (
@@ -54,14 +90,45 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column - Image and Colors */}
         <div className="space-y-8">
-          <Card className="overflow-hidden bg-gradient-to-b from-gray-50 to-white shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <Card className="overflow-hidden bg-gradient-to-b from-gray-50 to-white shadow-lg hover:shadow-xl transition-shadow duration-300 relative group">
             <AspectRatio ratio={16 / 9}>
               {currentImage ? (
-                <img
-                  src={currentImage}
-                  alt={car.name}
-                  className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
-                />
+                <>
+                  <img
+                    src={currentImage}
+                    alt={car.name}
+                    className="w-full h-full object-cover transition-all duration-500 hover:scale-105 cursor-pointer"
+                    onClick={() => setIsImageModalOpen(true)}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => setIsImageModalOpen(true)}
+                  >
+                    <Maximize2 className="w-5 h-5" />
+                  </Button>
+                  {allImages.length > 1 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={previousImage}
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={nextImage}
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </Button>
+                    </>
+                  )}
+                </>
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-100">
                   <CarIcon className="w-16 h-16 text-gray-400" />
@@ -69,6 +136,43 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
               )}
             </AspectRatio>
           </Card>
+
+          {/* Image Modal */}
+          <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
+            <DialogContent className="max-w-[90vw] h-[90vh] p-0">
+              <div className="relative w-full h-full">
+                <TransformWrapper>
+                  <TransformComponent>
+                    <img
+                      src={allImages[currentImageIndex]}
+                      alt={car.name}
+                      className="w-full h-full object-contain"
+                    />
+                  </TransformComponent>
+                </TransformWrapper>
+                {allImages.length > 1 && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute left-2 top-1/2 -translate-y-1/2"
+                      onClick={previousImage}
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                      onClick={nextImage}
+                    >
+                      <ChevronRight className="w-6 h-6" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
 
           <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
             <div className="flex items-center gap-2">
