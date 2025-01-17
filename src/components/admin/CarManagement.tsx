@@ -1,150 +1,94 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useToast } from "@/hooks/use-toast";
 import { CarForm } from "./CarForm";
 import { CarsTable } from "./CarsTable";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogDescription,
-} from "@/components/ui/alert-dialog";
-import { Car, CarSpecs } from "@/data/cars";
-import { Json } from "@/integrations/supabase/types";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useNavigate } from "react-router-dom";
+import { Car } from "@/integrations/supabase/types";
 
 export const CarManagement = () => {
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
-  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [cars, setCars] = useState<Car[]>([]);
-  const [consoleErrors, setConsoleErrors] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddingCar, setIsAddingCar] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    checkAuth();
-    const originalConsoleError = console.error;
-    const errors: string[] = [];
-
-    console.error = (...args) => {
-      const errorMessage = args.join(" ");
-      errors.push(errorMessage);
-      setConsoleErrors([...errors]);
-      originalConsoleError.apply(console, args);
-    };
-
-    fetchCars();
-
-    return () => {
-      console.error = originalConsoleError;
-    };
-  }, []);
-
-  const checkAuth = async () => {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    if (error || !session) {
-      console.error("Authentication error:", error);
-      toast({
-        title: "Ошибка аутентификации",
-        description: "Пожалуйста, войдите в систему",
-        variant: "destructive",
-      });
+  const checkAuth = () => {
+    const isAuthenticated = localStorage.getItem("isAdminAuthenticated") === "true";
+    if (!isAuthenticated) {
       navigate("/admin/login");
     }
-  };
-
-  const convertJsonToCarSpecs = (specs: Json): CarSpecs => {
-    if (typeof specs !== 'object' || !specs || Array.isArray(specs)) {
-      return {};
-    }
-
-    const specsObj = specs as Record<string, Json>;
-    
-    return {
-      acceleration: specsObj.acceleration?.toString(),
-      power: specsObj.power?.toString(),
-      maxSpeed: specsObj.maxSpeed?.toString(),
-      dimensions: specsObj.dimensions?.toString(),
-      clearance: specsObj.clearance?.toString(),
-      consumption: specsObj.consumption?.toString(),
-      trunk: specsObj.trunk?.toString(),
-      drive: specsObj.drive?.toString(),
-      range: specsObj.range?.toString(),
-      batteryCapacity: specsObj.batteryCapacity?.toString(),
-      wheelbase: specsObj.wheelbase?.toString(),
-      additionalFeatures: Array.isArray(specsObj.additionalFeatures) 
-        ? specsObj.additionalFeatures.map(String)
-        : undefined,
-    };
+    return isAuthenticated;
   };
 
   const fetchCars = async () => {
+    if (!checkAuth()) return;
+
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error("No active session");
-        return;
-      }
-
-      const { data: carsData, error } = await supabase
+      const { data, error } = await supabase
         .from("cars")
-        .select("*");
+        .select(`
+          *,
+          car_colors (*),
+          car_trims (*)
+        `)
+        .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching cars:", error);
-        throw error;
-      }
+      if (error) throw error;
 
-      if (carsData) {
-        const formattedCars = carsData.map(car => ({
-          id: car.id,
-          name: car.name,
-          basePrice: car.base_price,
-          image: car.image_url || '/placeholder.svg',
-          colors: [], // These will be populated separately if needed
-          interiors: [],
-          trims: [],
-          specs: convertJsonToCarSpecs(car.specs),
-        }));
-        setCars(formattedCars);
-      }
+      const carsWithParsedSpecs = data.map(car => ({
+        ...car,
+        specs: convertJsonToCarSpecs(car.specs)
+      }));
+
+      setCars(carsWithParsedSpecs);
     } catch (error) {
-      console.error("Error in fetchCars:", error);
+      console.error("Error fetching cars:", error);
       toast({
         title: "Ошибка",
         description: "Не удалось загрузить список автомобилей",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error("No active session");
-        toast({
-          title: "Ошибка аутентификации",
-          description: "Пожалуйста, войдите в систему",
-          variant: "destructive",
-        });
-        return;
-      }
+  const convertJsonToCarSpecs = (specs: any) => {
+    if (!specs || Array.isArray(specs)) return {};
+    
+    const specsObj = specs as Record<string, any>;
+    return {
+      acceleration: specsObj.acceleration || "",
+      power: specsObj.power || "",
+      maxSpeed: specsObj.maxSpeed || "",
+      dimensions: specsObj.dimensions || "",
+      clearance: specsObj.clearance || "",
+      consumption: specsObj.consumption || "",
+      trunk: specsObj.trunk || "",
+      drive: specsObj.drive || "",
+      range: specsObj.range || "",
+      batteryCapacity: specsObj.batteryCapacity || "",
+      wheelbase: specsObj.wheelbase || "",
+      additionalFeatures: Array.isArray(specsObj.additionalFeatures) 
+        ? specsObj.additionalFeatures 
+        : []
+    };
+  };
 
+  const handleDeleteCar = async (carId: string) => {
+    if (!checkAuth()) return;
+
+    try {
       const { error } = await supabase
         .from("cars")
         .delete()
-        .eq("id", id);
+        .eq("id", carId);
 
       if (error) throw error;
 
-      setCars(cars.filter(car => car.id !== id));
+      setCars(cars.filter(car => car.id !== carId));
       toast({
         title: "Успешно",
         description: "Автомобиль удален",
@@ -159,58 +103,36 @@ export const CarManagement = () => {
     }
   };
 
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
+  if (isLoading) {
+    return <div>Загрузка...</div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Управление автомобилями</h2>
-        <Button onClick={() => {
-          setSelectedCar(null);
-          setIsDialogOpen(true);
-        }}>
+        <Button onClick={() => setIsAddingCar(true)}>
           Добавить автомобиль
         </Button>
       </div>
 
-      <CarsTable
-        cars={cars}
-        onEdit={(car) => {
-          setSelectedCar(car);
-          setIsDialogOpen(true);
-        }}
-        onDelete={handleDelete}
-      />
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <CarForm
-            selectedCar={selectedCar}
-            onSuccess={() => {
-              setIsDialogOpen(false);
-              fetchCars();
-            }}
-            onCancel={() => setIsDialogOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Консоль ошибок</AlertDialogTitle>
-            <AlertDialogDescription>
-              <ScrollArea className="h-[300px] w-full rounded-md border p-4">
-                {consoleErrors.map((error, index) => (
-                  <Alert key={index} variant="destructive" className="mb-2">
-                    <AlertDescription>
-                      {error}
-                    </AlertDescription>
-                  </Alert>
-                ))}
-              </ScrollArea>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-        </AlertDialogContent>
-      </AlertDialog>
+      {isAddingCar ? (
+        <CarForm
+          onSuccess={() => {
+            setIsAddingCar(false);
+            fetchCars();
+          }}
+          onCancel={() => setIsAddingCar(false)}
+        />
+      ) : (
+        <CarsTable cars={cars} onDelete={handleDeleteCar} />
+      )}
     </div>
   );
 };
+
+export default CarManagement;
