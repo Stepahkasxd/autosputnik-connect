@@ -9,22 +9,66 @@ import LixiangL6Detail from "@/components/cars/LixiangL6Detail";
 import LixiangL7Detail from "@/components/cars/LixiangL7Detail";
 import LixiangL9Detail from "@/components/cars/LixiangL9Detail";
 import LixiangMegaDetail from "@/components/cars/LixiangMegaDetail";
+import { Car } from "@/data/cars";
 
-const fetchCarById = async (id: string) => {
+const fetchCarById = async (id: string): Promise<Car> => {
   console.log("Fetching car details for id:", id);
-  const { data, error } = await supabase
+  
+  // Fetch car details
+  const { data: carData, error: carError } = await supabase
     .from("cars")
     .select("*")
     .eq("id", id)
     .single();
 
-  if (error) {
-    console.error("Error fetching car:", error);
-    throw error;
+  if (carError) {
+    console.error("Error fetching car:", carError);
+    throw carError;
   }
 
-  console.log("Fetched car details:", data);
-  return data;
+  // Fetch car colors
+  const { data: colorData, error: colorError } = await supabase
+    .from("car_colors")
+    .select("*")
+    .eq("car_id", id);
+
+  if (colorError) {
+    console.error("Error fetching colors:", colorError);
+    throw colorError;
+  }
+
+  // Fetch car trims
+  const { data: trimData, error: trimError } = await supabase
+    .from("car_trims")
+    .select("*")
+    .eq("car_id", id);
+
+  if (trimError) {
+    console.error("Error fetching trims:", trimError);
+    throw trimError;
+  }
+
+  console.log("Fetched car details:", { carData, colorData, trimData });
+
+  // Transform the data to match the Car interface
+  const car: Car = {
+    id: carData.id,
+    name: carData.name,
+    basePrice: carData.base_price,
+    image: carData.image_url || "/placeholder.svg",
+    colors: colorData.map((color) => ({
+      name: color.name,
+      code: color.code,
+    })) || [],
+    interiors: [{ name: "Default Interior" }], // Default value since we don't have interiors in DB yet
+    trims: trimData.map((trim) => ({
+      name: trim.name,
+      price: trim.price,
+    })) || [],
+    specs: carData.specs || {},
+  };
+
+  return car;
 };
 
 const CarDetail = () => {
@@ -81,18 +125,16 @@ const CarDetail = () => {
       <div className="space-y-8 pb-16">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">{car.name}</h1>
-          <p className="text-xl text-gray-600">{car.base_price}</p>
+          <p className="text-xl text-gray-600">{car.basePrice}</p>
         </div>
         
-        {car.image_url && (
-          <div className="aspect-video overflow-hidden rounded-lg">
-            <img
-              src={car.image_url}
-              alt={car.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        )}
+        <div className="aspect-video overflow-hidden rounded-lg">
+          <img
+            src={car.image}
+            alt={car.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
 
         {car.specs && Object.keys(car.specs).length > 0 && (
           <div className="space-y-4">
