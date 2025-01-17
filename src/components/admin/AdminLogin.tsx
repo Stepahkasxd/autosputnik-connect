@@ -3,29 +3,39 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-
-const ADMIN_USERNAME = "root";
-const ADMIN_PASSWORD = "ZZDXDX3DN1MM87IVH0QTYKJPC6160I5PQCZLP24ON96L9POOMW6XTP1L";
+import { supabase } from "@/integrations/supabase/client";
 
 export const AdminLogin = () => {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      // Store admin session in localStorage
-      localStorage.setItem("isAdminAuthenticated", "true");
-      navigate("/admin");
-    } else {
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.session) {
+        navigate("/admin");
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
       toast({
         title: "Ошибка авторизации",
-        description: "Неверный логин или пароль",
+        description: "Неверный email или пароль",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -36,14 +46,14 @@ export const AdminLogin = () => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              Логин
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
             </label>
             <Input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -61,8 +71,8 @@ export const AdminLogin = () => {
             />
           </div>
           
-          <Button type="submit" className="w-full">
-            Войти
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Вход..." : "Войти"}
           </Button>
         </form>
       </div>
