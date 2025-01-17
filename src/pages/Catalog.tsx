@@ -1,9 +1,23 @@
 import { Header } from "@/components/Header";
 import { CarCard } from "@/components/CarCard";
 import { useToast } from "@/components/ui/use-toast";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+// Helper function to ensure specs are in the correct format
+const formatSpecs = (specs: any): Record<string, string> => {
+  if (typeof specs !== 'object' || specs === null) {
+    return {};
+  }
+  
+  const formattedSpecs: Record<string, string> = {};
+  Object.entries(specs).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      formattedSpecs[key] = String(value);
+    }
+  });
+  return formattedSpecs;
+};
 
 const fetchCars = async () => {
   console.log("Fetching cars from Supabase...");
@@ -24,8 +38,19 @@ const fetchCars = async () => {
     throw error;
   }
 
-  console.log("Fetched cars:", data);
-  return data;
+  // Transform the data to match the expected types
+  const transformedData = data.map(car => ({
+    ...car,
+    specs: formatSpecs(car.specs),
+    car_trims: car.car_trims?.map((trim: any) => ({
+      name: trim.name,
+      price: trim.price,
+      specs: formatSpecs(trim.specs)
+    })) || []
+  }));
+
+  console.log("Fetched and transformed cars:", transformedData);
+  return transformedData;
 };
 
 const Catalog = () => {
@@ -71,7 +96,7 @@ const Catalog = () => {
                   name={car.name}
                   price={car.base_price}
                   image={car.image_url || "/placeholder.svg"}
-                  specs={car.specs || {}}
+                  specs={car.specs}
                   trims={car.car_trims}
                 />
               ))}
