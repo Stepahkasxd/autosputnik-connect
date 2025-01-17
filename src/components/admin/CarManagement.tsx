@@ -132,7 +132,7 @@ export const CarManagement = () => {
 
       {isAddingCar || editingCar ? (
         <CarForm
-          car={editingCar}
+          selectedCar={editingCar}
           onSuccess={() => {
             setIsAddingCar(false);
             setEditingCar(null);
