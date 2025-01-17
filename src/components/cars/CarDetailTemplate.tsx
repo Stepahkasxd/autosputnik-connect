@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { 
   Battery, 
@@ -49,26 +49,36 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
     if (selectedColor?.image_url) {
       console.log("Setting image to color image:", selectedColor.image_url);
       setCurrentImage(selectedColor.image_url);
+      // Update current image index for the gallery
+      const newIndex = allImages.findIndex(img => img === selectedColor.image_url);
+      if (newIndex !== -1) {
+        setCurrentImageIndex(newIndex);
+      }
     } else {
       console.log("Setting image to default car image:", car.image);
       setCurrentImage(car.image);
+      setCurrentImageIndex(0);
     }
-  }, [selectedColor, car.image]);
+  }, [selectedColor, car.image, allImages]);
 
   const handleBack = () => {
     navigate(-1);
   };
 
   const nextImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === allImages.length - 1 ? 0 : prev + 1
-    );
+    setCurrentImageIndex((prev) => {
+      const newIndex = prev === allImages.length - 1 ? 0 : prev + 1;
+      setCurrentImage(allImages[newIndex]);
+      return newIndex;
+    });
   };
 
   const previousImage = () => {
-    setCurrentImageIndex((prev) => 
-      prev === 0 ? allImages.length - 1 : prev - 1
-    );
+    setCurrentImageIndex((prev) => {
+      const newIndex = prev === 0 ? allImages.length - 1 : prev - 1;
+      setCurrentImage(allImages[newIndex]);
+      return newIndex;
+    });
   };
 
   // Helper function to check if a spec exists and has a value
