@@ -52,13 +52,22 @@ export const ContactForm = () => {
           setMessages(prev => 
             prev.map((msg, idx) => 
               idx === prev.length - 1 
-                ? { ...msg, displayedText: currentText }
+                ? { ...msg, displayedText: currentText, isTyping: true }
                 : msg
             )
           );
           wordIndex++;
-          setTimeout(typeNextWord, 100); // Скорость печатания (мс)
+          setTimeout(typeNextWord, 100);
           scrollToBottom();
+        } else {
+          // Когда печатание закончено, убираем флаг isTyping
+          setMessages(prev => 
+            prev.map((msg, idx) => 
+              idx === prev.length - 1 
+                ? { ...msg, isTyping: false }
+                : msg
+            )
+          );
         }
       };
 
@@ -72,7 +81,7 @@ export const ContactForm = () => {
     if (isUser) {
       setMessages(prev => [...prev, { text, isUser, displayedText: text }]);
     } else {
-      setMessages(prev => [...prev, { text, isUser, displayedText: "" }]);
+      setMessages(prev => [...prev, { text, isUser, displayedText: "", isTyping: true }]);
     }
   };
 
