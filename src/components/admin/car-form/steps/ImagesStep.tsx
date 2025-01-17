@@ -6,7 +6,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ImagesStepProps {
-  onComplete: () => void;
+  onComplete: (data: any) => void;
   initialData: any;
   isEditing?: boolean;
 }
@@ -142,7 +142,7 @@ export const ImagesStep = ({ onComplete, initialData, isEditing = false }: Image
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? (isEditing ? "Обновление..." : "Добавление...") : (isEditing ? "Обновить" : "Завершить")}
+        {isLoading ? (isEditing ? "Обновление..." : "Добавление...") : (isEditing ? "Обновить" : "Далее")}
       </Button>
     </form>
   );
