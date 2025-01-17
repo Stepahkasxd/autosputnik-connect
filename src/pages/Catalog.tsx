@@ -76,7 +76,7 @@ const Catalog = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [priceRange, setPriceRange] = useState([0, 10000000]);
-  const [selectedDrive, setSelectedDrive] = useState<string>("");
+  const [selectedDrive, setSelectedDrive] = useState<string>("all");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const { data: cars, isLoading, error } = useQuery({
@@ -99,7 +99,7 @@ const Catalog = () => {
     const matchesSearch = car.name.toLowerCase().includes(searchQuery.toLowerCase());
     const basePrice = parseInt(car.base_price.replace(/[^\d]/g, ''), 10);
     const matchesPrice = basePrice >= priceRange[0] && basePrice <= priceRange[1];
-    const matchesDrive = !selectedDrive || 
+    const matchesDrive = selectedDrive === "all" || 
       (car.specs['Привод'] && car.specs['Привод'].toLowerCase().includes(selectedDrive.toLowerCase()));
 
     return matchesSearch && matchesPrice && matchesDrive;
@@ -108,7 +108,7 @@ const Catalog = () => {
   const clearFilters = () => {
     setSearchQuery("");
     setPriceRange([0, 10000000]);
-    setSelectedDrive("");
+    setSelectedDrive("all");
   };
 
   return (
@@ -163,7 +163,7 @@ const Catalog = () => {
                           <SelectValue placeholder="Выберите тип привода" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Все</SelectItem>
+                          <SelectItem value="all">Все типы</SelectItem>
                           <SelectItem value="полный">Полный</SelectItem>
                           <SelectItem value="задний">Задний</SelectItem>
                           <SelectItem value="передний">Передний</SelectItem>
