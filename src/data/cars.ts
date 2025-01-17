@@ -1,6 +1,7 @@
 export interface CarColor {
   name: string;
   code: string;
+  image_url?: string; // Added this property as optional
 }
 
 export interface CarInterior {
