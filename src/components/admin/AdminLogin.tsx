@@ -60,9 +60,9 @@ export const AdminLogin = () => {
 
       console.log("Admin credentials valid, attempting Supabase login...");
 
-      // Then sign in with Supabase using the new credentials
+      // Then sign in with Supabase using the admin email
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: "root@su.com",
+        email: "root@su.com", // Using email for Supabase auth
         password: ADMIN_PASSWORD,
       });
 
@@ -95,7 +95,7 @@ export const AdminLogin = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              Логин
+              Логин (root)
             </label>
             <Input
               id="username"
@@ -103,6 +103,7 @@ export const AdminLogin = () => {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
+              placeholder="Введите логин: root"
             />
           </div>
           
@@ -116,6 +117,7 @@ export const AdminLogin = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              placeholder="Введите пароль администратора"
             />
           </div>
           
