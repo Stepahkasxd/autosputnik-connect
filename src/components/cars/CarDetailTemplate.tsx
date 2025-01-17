@@ -78,24 +78,6 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
     });
   };
 
-  // Helper function to check if a spec exists and has a value
-  const hasSpec = (spec: string | undefined | null): boolean => {
-    return spec !== undefined && spec !== null && spec !== '';
-  };
-
-  // Helper function to render specifications
-  const renderSpecs = (specs: Record<string, string>) => {
-    return Object.entries(specs).map(([key, value]) => (
-      <div key={key} className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-        <CheckCircle2 className="w-5 h-5 text-primary" />
-        <div>
-          <p className="text-sm text-muted-foreground">{key}</p>
-          <p className="font-semibold">{value}</p>
-        </div>
-      </div>
-    ));
-  };
-
   return (
     <div className="space-y-6 animate-fade-up">
       <Button 
@@ -272,7 +254,7 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
               </div>
             </Card>
 
-            {/* Trims with Specifications */}
+            {/* Trims */}
             <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -296,18 +278,13 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
                         : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
                     )}
                   >
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value={trim.name} id={trim.name} />
                         <Label htmlFor={trim.name} className="font-medium">{trim.name}</Label>
                       </div>
                       <span className="font-semibold text-primary">{trim.price}</span>
                     </div>
-                    {trim.specs && Object.keys(trim.specs).length > 0 && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                        {renderSpecs(trim.specs)}
-                      </div>
-                    )}
                   </div>
                 ))}
               </RadioGroup>
