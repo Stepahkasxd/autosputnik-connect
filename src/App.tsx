@@ -6,6 +6,7 @@ import Index from "./pages/Index";
 import Services from "./pages/Services";
 import Catalog from "./pages/Catalog";
 import CarDetail from "./pages/CarDetail";
+import Support from "./pages/Support";
 import Admin from "./pages/Admin";
 import AdminLogin from "./components/admin/AdminLogin";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
@@ -23,6 +24,7 @@ function App() {
             <Route path="/services" element={<Services />} />
             <Route path="/catalog" element={<Catalog />} />
             <Route path="/car/:id" element={<CarDetail />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route 
               path="/admin" 
