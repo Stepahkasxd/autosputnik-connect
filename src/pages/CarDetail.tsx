@@ -8,11 +8,6 @@ import { Car, CarSpecs } from "@/data/cars";
 const fetchCarById = async (id: string): Promise<Car> => {
   console.log("Fetching car details for id:", id);
   
-  // If we're in preview mode, don't make the API call
-  if (id === 'preview') {
-    throw new Error('Preview mode is only available in the admin panel');
-  }
-
   const { data: carData, error: carError } = await supabase
     .from("cars")
     .select("*")
@@ -44,6 +39,7 @@ const fetchCarById = async (id: string): Promise<Car> => {
     throw trimError;
   }
 
+  // Add interior fetch
   const { data: interiorData, error: interiorError } = await supabase
     .from("car_interiors")
     .select("*")
@@ -56,17 +52,6 @@ const fetchCarById = async (id: string): Promise<Car> => {
 
   console.log("Fetched car details:", { carData, colorData, trimData, interiorData });
 
-  // Helper function to convert JSONB specs to Record<string, string>
-  const convertSpecs = (specs: any): Record<string, string> => {
-    if (!specs || typeof specs !== 'object') return {};
-    
-    const converted: Record<string, string> = {};
-    Object.entries(specs).forEach(([key, value]) => {
-      converted[key] = String(value); // Convert all values to strings
-    });
-    return converted;
-  };
-
   const car: Car = {
     id: carData.id,
     name: carData.name,
@@ -75,7 +60,6 @@ const fetchCarById = async (id: string): Promise<Car> => {
     colors: colorData.map((color) => ({
       name: color.name,
       code: color.code,
-      image_url: color.image_url,
     })) || [],
     interiors: interiorData.map((interior) => ({
       name: interior.name,
@@ -83,7 +67,6 @@ const fetchCarById = async (id: string): Promise<Car> => {
     trims: trimData.map((trim) => ({
       name: trim.name,
       price: trim.price,
-      specs: convertSpecs(trim.specs),
     })) || [],
     specs: carData.specs as CarSpecs || {},
   };
@@ -97,7 +80,7 @@ const CarDetail = () => {
   const { data: car, isLoading, error } = useQuery({
     queryKey: ["car", id],
     queryFn: () => fetchCarById(id!),
-    enabled: !!id && id !== 'preview',
+    enabled: !!id,
   });
 
   if (isLoading) {

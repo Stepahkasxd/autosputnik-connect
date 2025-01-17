@@ -29,23 +29,19 @@ export const CarsManagement = () => {
 
   const fetchCars = async () => {
     try {
-      console.log("[CarsManagement] Начало загрузки автомобилей...");
+      console.log("Fetching cars...");
       const { data: carsData, error: carsError } = await supabase
         .from("cars")
         .select("*, car_colors(*), car_interiors(*), car_trims(*)");
 
-      if (carsError) {
-        console.error("[CarsManagement] Ошибка при загрузке автомобилей:", carsError);
-        throw carsError;
-      }
-
-      console.log("[CarsManagement] Успешно загружены автомобили:", carsData);
+      if (carsError) throw carsError;
+      console.log("Fetched cars:", carsData);
       setCars(carsData);
     } catch (error) {
-      console.error("[CarsManagement] Критическая ошибка при загрузке автомобилей:", error);
+      console.error("Error fetching cars:", error);
       toast({
-        title: "Ошибка загрузки",
-        description: "Не удалось загрузить список автомобилей. Проверьте консоль для деталей.",
+        title: "Ошибка",
+        description: "Не удалось загрузить список автомобилей",
         variant: "destructive",
       });
     }
@@ -53,49 +49,32 @@ export const CarsManagement = () => {
 
   const handleDelete = async (carId: string) => {
     try {
-      console.log("[CarsManagement] Начало удаления автомобиля:", carId);
       setIsLoading(true);
       
       // Delete related records first
-      const deleteOperations = [
+      await Promise.all([
         supabase.from("car_colors").delete().eq("car_id", carId),
         supabase.from("car_trims").delete().eq("car_id", carId),
         supabase.from("car_interiors").delete().eq("car_id", carId),
-      ];
-
-      console.log("[CarsManagement] Удаление связанных записей...");
-      const results = await Promise.all(deleteOperations);
-      
-      // Check for errors in related deletions
-      results.forEach((result, index) => {
-        if (result.error) {
-          console.error(`[CarsManagement] Ошибка при удалении связанных данных (операция ${index}):`, result.error);
-          throw result.error;
-        }
-      });
+      ]);
 
       // Delete the car record
-      console.log("[CarsManagement] Удаление основной записи автомобиля...");
-      const { error: carDeleteError } = await supabase.from("cars").delete().eq("id", carId);
+      const { error } = await supabase.from("cars").delete().eq("id", carId);
       
-      if (carDeleteError) {
-        console.error("[CarsManagement] Ошибка при удалении автомобиля:", carDeleteError);
-        throw carDeleteError;
-      }
+      if (error) throw error;
 
-      console.log("[CarsManagement] Автомобиль успешно удален");
       toast({
         title: "Успешно",
         description: "Автомобиль успешно удален",
       });
 
       // Refresh the cars list
-      await fetchCars();
+      fetchCars();
     } catch (error) {
-      console.error("[CarsManagement] Критическая ошибка при удалении автомобиля:", error);
+      console.error("Error deleting car:", error);
       toast({
-        title: "Ошибка удаления",
-        description: "Не удалось удалить автомобиль. Проверьте консоль для деталей.",
+        title: "Ошибка",
+        description: "Не удалось удалить автомобиль",
         variant: "destructive",
       });
     } finally {
@@ -104,12 +83,11 @@ export const CarsManagement = () => {
   };
 
   const handleEdit = (car: any) => {
-    console.log("[CarsManagement] Редактирование автомобиля:", car);
+    console.log("Editing car:", car);
     setSelectedCar(car);
   };
 
   const handleEditComplete = () => {
-    console.log("[CarsManagement] Завершение редактирования автомобиля");
     setSelectedCar(null);
     fetchCars();
   };
