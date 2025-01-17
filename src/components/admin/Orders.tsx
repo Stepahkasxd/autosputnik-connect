@@ -95,7 +95,7 @@ export const Orders = () => {
                 <TableCell className="text-foreground">{order.trim_name || 'Базовая'}</TableCell>
                 <TableCell className="text-foreground">{order.phone}</TableCell>
                 <TableCell className="text-foreground">
-                  {order.contact_method === 'whatsapp' ? 'WhatsApp' : 'Telegram'}
+                  {order.contact_method === 'whatsapp' ? 'WhatsApp' : 'Телефонный звонок'}
                 </TableCell>
                 <TableCell>
                   <Button

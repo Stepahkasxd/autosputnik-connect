@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { MessageSquare, Send } from "lucide-react";
+import { MessageSquare, Phone, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -92,10 +92,10 @@ export const OrderForm = ({ carName, selectedTrim, onClose }: OrderFormProps) =>
             </Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem value="telegram" id="telegram" />
-            <Label htmlFor="telegram" className="flex items-center space-x-2">
-              <Send className="w-4 h-4" />
-              <span>Telegram</span>
+            <RadioGroupItem value="phone" id="phone" />
+            <Label htmlFor="phone" className="flex items-center space-x-2">
+              <Phone className="w-4 h-4" />
+              <span>Телефонный звонок</span>
             </Label>
           </div>
         </RadioGroup>
