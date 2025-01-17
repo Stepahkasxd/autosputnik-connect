@@ -1,5 +1,5 @@
 import { Car } from "@/data/cars";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -15,6 +15,16 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
   const [selectedColor, setSelectedColor] = useState(car?.colors[0]);
   const [selectedInterior, setSelectedInterior] = useState(car?.interiors[0]?.name);
   const [selectedTrim, setSelectedTrim] = useState(car?.trims[0]);
+  const [currentImage, setCurrentImage] = useState(car?.image);
+
+  useEffect(() => {
+    // Update the displayed image when color changes
+    if (selectedColor?.image_url) {
+      setCurrentImage(selectedColor.image_url);
+    } else {
+      setCurrentImage(car.image);
+    }
+  }, [selectedColor, car.image]);
 
   // Helper function to check if a spec exists and has a value
   const hasSpec = (spec: string | undefined | null): boolean => {
@@ -27,9 +37,9 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
       <div className="space-y-8">
         <Card className="overflow-hidden bg-gradient-to-b from-gray-50 to-white shadow-lg hover:shadow-xl transition-shadow duration-300">
           <AspectRatio ratio={16 / 9}>
-            {car.image ? (
+            {currentImage ? (
               <img
-                src={car.image}
+                src={currentImage}
                 alt={car.name}
                 className="w-full h-full object-cover transition-all duration-500 hover:scale-105"
               />
