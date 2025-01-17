@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import { BasicInfoStep } from "./steps/BasicInfoStep";
 import { CustomizationStep } from "./steps/CustomizationStep";
 import { ImagesStep } from "./steps/ImagesStep";
+import { PreviewStep } from "./steps/PreviewStep";
 
 interface AddCarStepsProps {
   isEditing?: boolean;
@@ -26,7 +27,6 @@ export const AddCarSteps = ({ isEditing = false, initialCarData, onEditComplete 
 
   useEffect(() => {
     if (isEditing && initialCarData) {
-      // Transform the data from the database format to the form format
       setFormData({
         id: initialCarData.id,
         name: initialCarData.name,
@@ -35,6 +35,7 @@ export const AddCarSteps = ({ isEditing = false, initialCarData, onEditComplete 
         colors: initialCarData.car_colors || [],
         interiors: initialCarData.car_interiors || [],
         trims: initialCarData.car_trims || [],
+        image_url: initialCarData.image_url,
       });
       setOpen(true);
     }
@@ -68,9 +69,26 @@ export const AddCarSteps = ({ isEditing = false, initialCarData, onEditComplete 
       case 2:
         return <CustomizationStep onComplete={handleStepComplete} initialData={formData} isEditing={isEditing} />;
       case 3:
-        return <ImagesStep onComplete={handleClose} initialData={formData} isEditing={isEditing} />;
+        return <ImagesStep onComplete={handleStepComplete} initialData={formData} isEditing={isEditing} />;
+      case 4:
+        return <PreviewStep onComplete={handleClose} initialData={formData} isEditing={isEditing} />;
       default:
         return null;
+    }
+  };
+
+  const getStepTitle = () => {
+    switch (step) {
+      case 1:
+        return isEditing ? "Редактирование основной информации" : "Основная информация";
+      case 2:
+        return isEditing ? "Редактирование вариантов" : "Настройка вариантов";
+      case 3:
+        return isEditing ? "Редактирование изображений" : "Добавление изображений";
+      case 4:
+        return "Предпросмотр";
+      default:
+        return "";
     }
   };
 
@@ -79,11 +97,7 @@ export const AddCarSteps = ({ isEditing = false, initialCarData, onEditComplete 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>
-              {step === 1 && "Редактирование основной информации"}
-              {step === 2 && "Редактирование вариантов"}
-              {step === 3 && "Редактирование изображений"}
-            </DialogTitle>
+            <DialogTitle>{getStepTitle()}</DialogTitle>
           </DialogHeader>
           {renderStep()}
         </DialogContent>
@@ -100,11 +114,7 @@ export const AddCarSteps = ({ isEditing = false, initialCarData, onEditComplete 
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>
-            {step === 1 && "Основная информация"}
-            {step === 2 && "Настройка вариантов"}
-            {step === 3 && "Добавление изображений"}
-          </DialogTitle>
+          <DialogTitle>{getStepTitle()}</DialogTitle>
         </DialogHeader>
         {renderStep()}
       </DialogContent>

@@ -61,102 +61,31 @@ export const ImagesStep = ({ onComplete, initialData, isEditing = false }: Image
         mainImageUrl = await uploadImage(mainImage, 'car-images');
       }
 
-      let carId = initialData.id;
-
-      if (isEditing) {
-        // Update existing car
-        const { error: carError } = await supabase
-          .from("cars")
-          .update({
-            name: initialData.name,
-            base_price: initialData.basePrice,
-            image_url: mainImageUrl,
-            specs: initialData.specs || {},
-          })
-          .eq('id', carId);
-
-        if (carError) throw carError;
-
-        // Delete existing colors, trims, and interiors
-        await Promise.all([
-          supabase.from("car_colors").delete().eq("car_id", carId),
-          supabase.from("car_trims").delete().eq("car_id", carId),
-          supabase.from("car_interiors").delete().eq("car_id", carId),
-        ]);
-      } else {
-        // Add new car
-        const { data: carData, error: carError } = await supabase
-          .from("cars")
-          .insert([
-            {
-              name: initialData.name,
-              base_price: initialData.basePrice,
-              image_url: mainImageUrl,
-              specs: initialData.specs || {},
-            },
-          ])
-          .select()
-          .single();
-
-        if (carError) throw carError;
-        carId = carData.id;
-      }
-
-      // Upload color images and add colors
+      // Upload color images and prepare colors data
       const colorPromises = initialData.colors.map(async (color: any) => {
         const colorImage = colorImages[color.name];
         let imageUrl = color.image_url;
         if (colorImage) {
           imageUrl = await uploadImage(colorImage, 'car-color-images');
         }
-
-        return supabase.from("car_colors").insert([{
-          car_id: carId,
-          name: color.name,
-          code: color.code,
+        return {
+          ...color,
           image_url: imageUrl,
-        }]);
+        };
       });
 
-      await Promise.all(colorPromises);
+      const updatedColors = await Promise.all(colorPromises);
 
-      // Add trims
-      if (initialData.trims.length > 0) {
-        await supabase
-          .from("car_trims")
-          .insert(
-            initialData.trims.map((trim: any) => ({
-              car_id: carId,
-              name: trim.name,
-              price: trim.price,
-              specs: trim.specs || {},
-            }))
-          );
-      }
-
-      // Add interiors
-      if (initialData.interiors.length > 0) {
-        await supabase
-          .from("car_interiors")
-          .insert(
-            initialData.interiors.map((interior: any) => ({
-              car_id: carId,
-              name: interior.name,
-            }))
-          );
-      }
-
-      toast({
-        title: "Успешно",
-        description: isEditing ? "Автомобиль успешно обновлен" : "Автомобиль успешно добавлен",
+      onComplete({
+        ...initialData,
+        image_url: mainImageUrl,
+        colors: updatedColors,
       });
-
-      onComplete();
     } catch (error) {
-      console.error("Error saving car:", error);
+      console.error("Error uploading images:", error);
       toast({
         title: "Ошибка",
-        description: isEditing ? "Не удалось обновить автомобиль" : "Не удалось добавить автомобиль",
+        description: "Не удалось загрузить изображения",
         variant: "destructive",
       });
     } finally {
