@@ -37,7 +37,6 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Collect all available images
   const allImages = [
     car.image,
     ...car.colors
@@ -78,11 +77,16 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
     });
   };
 
+  // Helper function to check if specs exist and have values
+  const hasSpecs = (specs: Record<string, string | undefined> | undefined): boolean => {
+    return specs !== undefined && Object.keys(specs).length > 0;
+  };
+
   return (
     <div className="space-y-6 animate-fade-up">
       <Button 
         variant="ghost" 
-        onClick={handleBack}
+        onClick={() => navigate(-1)}
         className="flex items-center gap-2 mb-4 hover:bg-secondary"
       >
         <ArrowLeft className="w-4 h-4" />
@@ -236,23 +240,27 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
             </Card>
 
             {/* Base Specifications */}
-            <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-semibold">Базовые характеристики</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {car.specs && Object.entries(car.specs).map(([key, value]) => (
-                  <div key={key} className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-                    <CheckCircle2 className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">{key}</p>
-                      <p className="font-semibold">{value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
+            {hasSpecs(car.specs) && (
+              <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-semibold">Базовые характеристики</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(car.specs).map(([key, value]) => (
+                    value && (
+                      <div key={key} className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
+                        <CheckCircle2 className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">{key}</p>
+                          <p className="font-semibold">{value}</p>
+                        </div>
+                      </div>
+                    )
+                  ))}
+                </div>
+              </Card>
+            )}
 
             {/* Trims */}
             <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
