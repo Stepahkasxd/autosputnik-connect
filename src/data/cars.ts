@@ -13,14 +13,18 @@ export interface CarTrim {
 }
 
 export interface CarSpecs {
+  acceleration?: string;
+  power?: string;
+  maxSpeed?: string;
+  dimensions?: string;
+  clearance?: string;
+  consumption?: string;
+  trunk?: string;
   drive?: string;
   range?: string;
-  acceleration: string;
-  power: string;
   batteryCapacity?: string;
-  additionalFeatures?: string[];
-  dimensions?: string;
   wheelbase?: string;
+  additionalFeatures?: string[];
 }
 
 export interface Car {

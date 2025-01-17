@@ -61,24 +61,23 @@ export const CarManagement = () => {
 
   const convertJsonToCarSpecs = (specs: Json): CarSpecs => {
     if (typeof specs !== 'object' || !specs) {
-      return {
-        acceleration: "",
-        power: "",
-        maxSpeed: "",
-        dimensions: "",
-        clearance: "",
-        consumption: "",
-        trunk: "",
-      };
+      return {};
     }
     return {
-      acceleration: specs.acceleration?.toString() || "",
-      power: specs.power?.toString() || "",
-      maxSpeed: specs.maxSpeed?.toString() || "",
-      dimensions: specs.dimensions?.toString() || "",
-      clearance: specs.clearance?.toString() || "",
-      consumption: specs.consumption?.toString() || "",
-      trunk: specs.trunk?.toString() || "",
+      acceleration: specs.acceleration?.toString(),
+      power: specs.power?.toString(),
+      maxSpeed: specs.maxSpeed?.toString(),
+      dimensions: specs.dimensions?.toString(),
+      clearance: specs.clearance?.toString(),
+      consumption: specs.consumption?.toString(),
+      trunk: specs.trunk?.toString(),
+      drive: specs.drive?.toString(),
+      range: specs.range?.toString(),
+      batteryCapacity: specs.batteryCapacity?.toString(),
+      wheelbase: specs.wheelbase?.toString(),
+      additionalFeatures: Array.isArray(specs.additionalFeatures) 
+        ? specs.additionalFeatures.map(String)
+        : undefined,
     };
   };
 
@@ -90,7 +89,7 @@ export const CarManagement = () => {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data: carsData, error } = await supabase
         .from("cars")
         .select("*");
 
@@ -99,9 +98,15 @@ export const CarManagement = () => {
         throw error;
       }
 
-      if (data) {
-        const formattedCars = data.map(car => ({
-          ...car,
+      if (carsData) {
+        const formattedCars = carsData.map(car => ({
+          id: car.id,
+          name: car.name,
+          basePrice: car.base_price,
+          image: car.image_url || '/placeholder.svg',
+          colors: [], // These will be populated separately if needed
+          interiors: [],
+          trims: [],
           specs: convertJsonToCarSpecs(car.specs),
         }));
         setCars(formattedCars);
