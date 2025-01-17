@@ -3,17 +3,17 @@ import { ContactForm } from "@/components/ContactForm";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-background to-background/80 dark:from-background dark:to-background/50">
       <Header />
       
       <main className="container mx-auto px-4 pt-24">
         {/* Hero Section */}
         <section className="py-12 md:py-20">
           <div className="max-w-4xl mx-auto text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 fade-up bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 fade-up bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400">
               Найдите свой идеальный автомобиль
             </h1>
-            <p className="text-xl text-gray-600 fade-up animation-delay-100">
+            <p className="text-xl text-muted-foreground fade-up animation-delay-100">
               Подберем автомобиль на любой вкус и бюджет
             </p>
           </div>
