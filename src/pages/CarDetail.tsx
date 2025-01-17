@@ -9,7 +9,7 @@ import LixiangL6Detail from "@/components/cars/LixiangL6Detail";
 import LixiangL7Detail from "@/components/cars/LixiangL7Detail";
 import LixiangL9Detail from "@/components/cars/LixiangL9Detail";
 import LixiangMegaDetail from "@/components/cars/LixiangMegaDetail";
-import { Car } from "@/data/cars";
+import { Car, CarSpecs } from "@/data/cars";
 
 const fetchCarById = async (id: string): Promise<Car> => {
   console.log("Fetching car details for id:", id);
@@ -65,7 +65,7 @@ const fetchCarById = async (id: string): Promise<Car> => {
       name: trim.name,
       price: trim.price,
     })) || [],
-    specs: carData.specs || {},
+    specs: carData.specs as CarSpecs || {},
   };
 
   return car;
