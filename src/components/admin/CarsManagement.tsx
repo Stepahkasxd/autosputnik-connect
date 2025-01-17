@@ -26,6 +26,11 @@ export const CarsManagement = () => {
     { name: "", price: "" },
   ]);
 
+  // Interiors state
+  const [interiors, setInteriors] = useState<{ name: string }[]>([
+    { name: "" },
+  ]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setImage(e.target.files[0]);
@@ -58,6 +63,20 @@ export const CarsManagement = () => {
     const newTrims = [...trims];
     newTrims[index][field] = value;
     setTrims(newTrims);
+  };
+
+  const addInterior = () => {
+    setInteriors([...interiors, { name: "" }]);
+  };
+
+  const removeInterior = (index: number) => {
+    setInteriors(interiors.filter((_, i) => i !== index));
+  };
+
+  const updateInterior = (index: number, value: string) => {
+    const newInteriors = [...interiors];
+    newInteriors[index].name = value;
+    setInteriors(newInteriors);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,6 +170,20 @@ export const CarsManagement = () => {
         if (trimsError) throw trimsError;
       }
 
+      // Add interiors
+      if (interiors.length > 0) {
+        const { error: interiorsError } = await supabase
+          .from("car_interiors")
+          .insert(
+            interiors.map((interior) => ({
+              car_id: carData.id,
+              name: interior.name,
+            }))
+          );
+
+        if (interiorsError) throw interiorsError;
+      }
+
       console.log("Car added successfully");
       
       toast({
@@ -167,6 +200,7 @@ export const CarsManagement = () => {
       setRange("");
       setColors([{ name: "", code: "#000000" }]);
       setTrims([{ name: "", price: "" }]);
+      setInteriors([{ name: "" }]);
       if (e.target instanceof HTMLFormElement) {
         e.target.reset();
       }
@@ -280,6 +314,38 @@ export const CarsManagement = () => {
                     variant="ghost"
                     size="icon"
                     onClick={() => removeTrim(index)}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Interiors Section */}
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <Label>Варианты салона</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addInterior}>
+                <Plus className="w-4 h-4 mr-1" /> Добавить вариант салона
+              </Button>
+            </div>
+            {interiors.map((interior, index) => (
+              <div key={index} className="flex gap-2 items-start">
+                <div className="flex-1">
+                  <Input
+                    value={interior.name}
+                    onChange={(e) => updateInterior(index, e.target.value)}
+                    placeholder="Название варианта салона"
+                    required
+                  />
+                </div>
+                {interiors.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeInterior(index)}
                   >
                     <X className="w-4 h-4" />
                   </Button>
