@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import {
@@ -24,7 +23,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-// Helper function to ensure specs are in the correct format
 const formatSpecs = (specs: any): Record<string, string> => {
   if (typeof specs !== 'object' || specs === null) {
     return {};
@@ -75,8 +73,12 @@ const fetchCars = async () => {
 const Catalog = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [priceRange, setPriceRange] = useState([0, 10000000]);
+  const [minPrice, setMinPrice] = useState("0");
+  const [maxPrice, setMaxPrice] = useState("10000000");
   const [selectedDrive, setSelectedDrive] = useState<string>("all");
+  const [selectedPower, setSelectedPower] = useState<string>("all");
+  const [selectedAcceleration, setSelectedAcceleration] = useState<string>("all");
+  const [selectedBodyType, setSelectedBodyType] = useState<string>("all");
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const { data: cars, isLoading, error } = useQuery({
@@ -97,18 +99,45 @@ const Catalog = () => {
 
   const filteredCars = cars?.filter(car => {
     const matchesSearch = car.name.toLowerCase().includes(searchQuery.toLowerCase());
+    
     const basePrice = parseInt(car.base_price.replace(/[^\d]/g, ''), 10);
-    const matchesPrice = basePrice >= priceRange[0] && basePrice <= priceRange[1];
+    const minPriceNum = parseInt(minPrice.replace(/[^\d]/g, '') || "0", 10);
+    const maxPriceNum = parseInt(maxPrice.replace(/[^\d]/g, '') || "10000000", 10);
+    const matchesPrice = basePrice >= minPriceNum && basePrice <= maxPriceNum;
+    
     const matchesDrive = selectedDrive === "all" || 
       (car.specs['Привод'] && car.specs['Привод'].toLowerCase().includes(selectedDrive.toLowerCase()));
 
-    return matchesSearch && matchesPrice && matchesDrive;
+    const matchesPower = selectedPower === "all" ||
+      (car.specs['Мощность'] && parseInt(car.specs['Мощность']) >= parseInt(selectedPower));
+
+    const matchesAcceleration = selectedAcceleration === "all" ||
+      (car.specs['Разгон до 100 км/ч'] && parseFloat(car.specs['Разгон до 100 км/ч']) <= parseFloat(selectedAcceleration));
+
+    const matchesBodyType = selectedBodyType === "all" ||
+      (car.specs['Тип кузова'] && car.specs['Тип кузова'].toLowerCase() === selectedBodyType.toLowerCase());
+
+    return matchesSearch && matchesPrice && matchesDrive && 
+           matchesPower && matchesAcceleration && matchesBodyType;
   });
 
   const clearFilters = () => {
     setSearchQuery("");
-    setPriceRange([0, 10000000]);
+    setMinPrice("0");
+    setMaxPrice("10000000");
     setSelectedDrive("all");
+    setSelectedPower("all");
+    setSelectedAcceleration("all");
+    setSelectedBodyType("all");
+  };
+
+  const handlePriceChange = (value: string, type: 'min' | 'max') => {
+    const numericValue = value.replace(/[^\d]/g, '');
+    if (type === 'min') {
+      setMinPrice(numericValue);
+    } else {
+      setMaxPrice(numericValue);
+    }
   };
 
   return (
@@ -142,17 +171,22 @@ const Catalog = () => {
                   <div className="mt-6 space-y-6">
                     <div className="space-y-2">
                       <Label>Ценовой диапазон</Label>
-                      <div className="pt-4">
-                        <Slider
-                          value={priceRange}
-                          min={0}
-                          max={10000000}
-                          step={100000}
-                          onValueChange={setPriceRange}
-                        />
-                        <div className="flex justify-between mt-2 text-sm text-gray-500">
-                          <span>{priceRange[0].toLocaleString()} ₽</span>
-                          <span>{priceRange[1].toLocaleString()} ₽</span>
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                          <Input
+                            type="text"
+                            placeholder="От"
+                            value={minPrice}
+                            onChange={(e) => handlePriceChange(e.target.value, 'min')}
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            type="text"
+                            placeholder="До"
+                            value={maxPrice}
+                            onChange={(e) => handlePriceChange(e.target.value, 'max')}
+                          />
                         </div>
                       </div>
                     </div>
@@ -167,6 +201,51 @@ const Catalog = () => {
                           <SelectItem value="полный">Полный</SelectItem>
                           <SelectItem value="задний">Задний</SelectItem>
                           <SelectItem value="передний">Передний</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Мощность (л.с.)</Label>
+                      <Select value={selectedPower} onValueChange={setSelectedPower}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите мощность" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Любая</SelectItem>
+                          <SelectItem value="150">От 150</SelectItem>
+                          <SelectItem value="200">От 200</SelectItem>
+                          <SelectItem value="300">От 300</SelectItem>
+                          <SelectItem value="400">От 400</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Разгон до 100 км/ч (сек)</Label>
+                      <Select value={selectedAcceleration} onValueChange={setSelectedAcceleration}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите время разгона" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Любое</SelectItem>
+                          <SelectItem value="4">До 4 сек</SelectItem>
+                          <SelectItem value="5">До 5 сек</SelectItem>
+                          <SelectItem value="6">До 6 сек</SelectItem>
+                          <SelectItem value="7">До 7 сек</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Тип кузова</Label>
+                      <Select value={selectedBodyType} onValueChange={setSelectedBodyType}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Выберите тип кузова" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Все типы</SelectItem>
+                          <SelectItem value="седан">Седан</SelectItem>
+                          <SelectItem value="хэтчбек">Хэтчбек</SelectItem>
+                          <SelectItem value="внедорожник">Внедорожник</SelectItem>
+                          <SelectItem value="кроссовер">Кроссовер</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
