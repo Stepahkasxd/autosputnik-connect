@@ -7,51 +7,21 @@ import { MessageSquare, Phone, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CarColor, CarInterior, CarTrim } from "@/data/cars";
 
 interface OrderFormProps {
   carName: string;
-  selectedTrim?: {
-    name: string;
-    price: string;
-  };
+  selectedTrim?: CarTrim;
+  selectedColor: CarColor;
+  selectedInterior: CarInterior;
   onClose: () => void;
 }
 
-export const OrderForm = ({ carName, selectedTrim, onClose }: OrderFormProps) => {
+export const OrderForm = ({ carName, selectedTrim, selectedColor, selectedInterior, onClose }: OrderFormProps) => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [contactMethod, setContactMethod] = useState("whatsapp");
-  const [selectedColor, setSelectedColor] = useState("");
-  const [selectedInterior, setSelectedInterior] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [carDetails, setCarDetails] = useState<{
-    colors: { name: string; code: string }[];
-    interiors: { name: string }[];
-  }>({ colors: [], interiors: [] });
-
-  useEffect(() => {
-    const fetchCarDetails = async () => {
-      try {
-        const { data: colors } = await supabase
-          .from("car_colors")
-          .select("name, code")
-          .eq("car_name", carName);
-
-        const { data: interiors } = await supabase
-          .from("car_interiors")
-          .select("name")
-          .eq("car_name", carName);
-
-        if (colors && interiors) {
-          setCarDetails({ colors, interiors });
-        }
-      } catch (error) {
-        console.error("Error fetching car details:", error);
-      }
-    };
-
-    fetchCarDetails();
-  }, [carName]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,8 +35,8 @@ export const OrderForm = ({ carName, selectedTrim, onClose }: OrderFormProps) =>
           trim_name: selectedTrim?.name,
           phone,
           contact_method: contactMethod,
-          color: selectedColor,
-          interior: selectedInterior,
+          color: selectedColor.name,
+          interior: selectedInterior.name,
           price: selectedTrim?.price || "Base",
         },
       ]);
@@ -112,40 +82,29 @@ export const OrderForm = ({ carName, selectedTrim, onClose }: OrderFormProps) =>
           />
         </div>
 
-        <div>
-          <Select value={selectedColor} onValueChange={setSelectedColor}>
-            <SelectTrigger>
-              <SelectValue placeholder="Выберите цвет" />
-            </SelectTrigger>
-            <SelectContent>
-              {carDetails.colors.map((color) => (
-                <SelectItem key={color.name} value={color.name}>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: color.code }}
-                    />
-                    {color.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">Выбранный цвет:</span>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-4 h-4 rounded-full border"
+                style={{ backgroundColor: selectedColor.code }}
+              />
+              <span>{selectedColor.name}</span>
+            </div>
+          </div>
 
-        <div>
-          <Select value={selectedInterior} onValueChange={setSelectedInterior}>
-            <SelectTrigger>
-              <SelectValue placeholder="Выберите отделку салона" />
-            </SelectTrigger>
-            <SelectContent>
-              {carDetails.interiors.map((interior) => (
-                <SelectItem key={interior.name} value={interior.name}>
-                  {interior.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">Выбранный салон:</span>
+            <span>{selectedInterior.name}</span>
+          </div>
+
+          {selectedTrim && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-500">Комплектация:</span>
+              <span>{selectedTrim.name}</span>
+            </div>
+          )}
         </div>
 
         <RadioGroup
