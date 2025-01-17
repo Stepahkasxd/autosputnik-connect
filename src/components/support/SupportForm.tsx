@@ -23,11 +23,13 @@ const formSchema = z.object({
   message: z.string().min(10, "Сообщение должно содержать минимум 10 символов"),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 export const SupportForm = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
@@ -37,12 +39,17 @@ export const SupportForm = () => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
       const { error } = await supabase
         .from("support_tickets")
-        .insert([values]);
+        .insert({
+          name: values.name,
+          email: values.email,
+          subject: values.subject,
+          message: values.message,
+        });
 
       if (error) throw error;
 
