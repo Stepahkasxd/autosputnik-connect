@@ -39,7 +39,18 @@ const fetchCarById = async (id: string): Promise<Car> => {
     throw trimError;
   }
 
-  console.log("Fetched car details:", { carData, colorData, trimData });
+  // Add interior fetch
+  const { data: interiorData, error: interiorError } = await supabase
+    .from("car_interiors")
+    .select("*")
+    .eq("car_id", id);
+
+  if (interiorError) {
+    console.error("Error fetching interiors:", interiorError);
+    throw interiorError;
+  }
+
+  console.log("Fetched car details:", { carData, colorData, trimData, interiorData });
 
   const car: Car = {
     id: carData.id,
@@ -50,7 +61,9 @@ const fetchCarById = async (id: string): Promise<Car> => {
       name: color.name,
       code: color.code,
     })) || [],
-    interiors: [{ name: "Default Interior" }],
+    interiors: interiorData.map((interior) => ({
+      name: interior.name,
+    })) || [],
     trims: trimData.map((trim) => ({
       name: trim.name,
       price: trim.price,
