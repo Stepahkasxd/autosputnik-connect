@@ -14,6 +14,7 @@ interface ChatMessage {
   text: string;
   isUser?: boolean;
   isTyping?: boolean;
+  displayedText?: string;
 }
 
 export const ContactForm = () => {
@@ -34,21 +35,45 @@ export const ContactForm = () => {
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage?.isUser && lastMessage?.text) {
+      let currentText = "";
+      const words = lastMessage.text.split(" ");
+      let wordIndex = 0;
+
+      const typeNextWord = () => {
+        if (wordIndex < words.length) {
+          currentText += (wordIndex > 0 ? " " : "") + words[wordIndex];
+          setMessages(prev => 
+            prev.map((msg, idx) => 
+              idx === prev.length - 1 
+                ? { ...msg, displayedText: currentText }
+                : msg
+            )
+          );
+          wordIndex++;
+          setTimeout(typeNextWord, 100); // Скорость печатания (мс)
+          scrollToBottom();
+        }
+      };
+
+      typeNextWord();
+    } else {
+      scrollToBottom();
+    }
   }, [messages]);
 
   const simulateTyping = async (text: string, isUser = false) => {
-    const tempMessage = { text: "", isTyping: true, isUser };
-    setMessages(prev => [...prev, tempMessage]);
-    
-    // Add the message with typing animation
-    const newMessage = { text, isUser, isTyping: false };
-    setMessages(prev => [...prev.slice(0, -1), newMessage]);
+    if (isUser) {
+      setMessages(prev => [...prev, { text, isUser, displayedText: text }]);
+    } else {
+      setMessages(prev => [...prev, { text, isUser, displayedText: "" }]);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +96,6 @@ export const ContactForm = () => {
         description: "Виктория свяжется с вами в ближайшее время",
       });
       
-      // Reset form
       setStep("welcome");
       setMessages([messages[0]]);
       setFormData({
@@ -92,11 +116,7 @@ export const ContactForm = () => {
   };
 
   const addMessage = async (text: string, isUser = false) => {
-    if (isUser) {
-      setMessages(prev => [...prev, { text, isUser }]);
-    } else {
-      await simulateTyping(text);
-    }
+    await simulateTyping(text, isUser);
   };
 
   const renderInput = () => {
@@ -221,6 +241,7 @@ export const ContactForm = () => {
       <div 
         ref={chatContainerRef}
         className="space-y-4 max-h-[400px] overflow-y-auto mb-4 scroll-smooth"
+        style={{ scrollBehavior: 'smooth' }}
       >
         {messages.map((message, index) => (
           <div
@@ -229,19 +250,10 @@ export const ContactForm = () => {
               "p-3 rounded-lg transition-all duration-300 animate-fade-up",
               message.isUser
                 ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white ml-8"
-                : "bg-white/80 backdrop-blur-sm border border-purple-100 mr-8",
-              message.isTyping && "opacity-70"
+                : "bg-white/80 backdrop-blur-sm border border-purple-100 mr-8"
             )}
           >
-            {message.isTyping ? (
-              <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0.2s]" />
-                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0.4s]" />
-              </div>
-            ) : (
-              message.text
-            )}
+            {message.isUser ? message.text : (message.displayedText || "")}
           </div>
         ))}
         <div ref={messagesEndRef} />
