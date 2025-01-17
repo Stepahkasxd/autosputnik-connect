@@ -28,6 +28,14 @@ interface TrimInput {
   specs: CarSpecs;
 }
 
+const sanitizeFileName = (fileName: string): string => {
+  // Заменяем пробелы и специальные символы на безопасные
+  return fileName
+    .toLowerCase()
+    .replace(/[^a-z0-9.]/g, '-')
+    .replace(/-+/g, '-');
+};
+
 export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
   const { toast } = useToast();
   const [specs, setSpecs] = useState<CarSpecs>(
@@ -144,9 +152,11 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
     };
 
     try {
+      console.log("Starting car save process...");
       let carId;
       if (selectedCar) {
-        await supabase
+        console.log("Updating existing car:", selectedCar.id);
+        const { error: updateError } = await supabase
           .from("cars")
           .update({
             name,
@@ -154,9 +164,15 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
             specs: specsAsJson,
           })
           .eq("id", selectedCar.id);
+
+        if (updateError) {
+          console.error("Error updating car:", updateError);
+          throw updateError;
+        }
         carId = selectedCar.id;
       } else {
-        const { data: carData } = await supabase
+        console.log("Creating new car with name:", name);
+        const { data: carData, error: insertError } = await supabase
           .from("cars")
           .insert([{
             name,
@@ -165,11 +181,18 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
           }])
           .select()
           .single();
+
+        if (insertError) {
+          console.error("Error inserting car:", insertError);
+          throw insertError;
+        }
         carId = carData?.id;
+        console.log("New car created with ID:", carId);
       }
 
       if (carId) {
         if (selectedCar) {
+          console.log("Deleting existing colors for car:", carId);
           await supabase
             .from("car_colors")
             .delete()
@@ -177,14 +200,16 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
         }
         
         const validColors = colors.filter(c => c.name && c.code);
+        console.log("Processing colors:", validColors.length);
         for (const color of validColors) {
           let imageUrl = color.imageUrl;
           
           if (color.imageFile) {
-            const fileName = `${carId}-${color.name}-${Date.now()}`;
+            const sanitizedFileName = sanitizeFileName(`${carId}-${color.name}-${Date.now()}`);
+            console.log("Uploading color image:", sanitizedFileName);
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from("car-color-images")
-              .upload(fileName, color.imageFile);
+              .upload(sanitizedFileName, color.imageFile);
 
             if (uploadError) {
               console.error("Error uploading color image:", uploadError);
@@ -193,12 +218,13 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
 
             const { data: { publicUrl } } = supabase.storage
               .from("car-color-images")
-              .getPublicUrl(fileName);
+              .getPublicUrl(sanitizedFileName);
 
             imageUrl = publicUrl;
+            console.log("Color image uploaded, public URL:", imageUrl);
           }
 
-          await supabase
+          const { error: colorError } = await supabase
             .from("car_colors")
             .insert({
               car_id: carId,
@@ -206,9 +232,14 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
               code: color.code,
               image_url: imageUrl,
             });
+
+          if (colorError) {
+            console.error("Error inserting color:", colorError);
+          }
         }
 
         if (selectedCar) {
+          console.log("Deleting existing trims for car:", carId);
           await supabase
             .from("car_trims")
             .delete()
@@ -216,6 +247,7 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
         }
 
         const validTrims = trims.filter(t => t.name && t.price);
+        console.log("Processing trims:", validTrims.length);
         if (validTrims.length > 0) {
           const trimsToInsert = validTrims.map(trim => ({
             car_id: carId,
@@ -233,18 +265,27 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
             } as Json,
           }));
 
-          await supabase
+          const { error: trimsError } = await supabase
             .from("car_trims")
             .insert(trimsToInsert);
+
+          if (trimsError) {
+            console.error("Error inserting trims:", trimsError);
+          }
         }
       }
 
       const imageFile = formData.get("image") as File;
       if (imageFile && imageFile.size > 0) {
-        const fileName = `${Date.now()}-${imageFile.name}`;
-        await supabase.storage
+        const sanitizedFileName = sanitizeFileName(`${Date.now()}-${imageFile.name}`);
+        console.log("Uploading main car image:", sanitizedFileName);
+        const { error: mainImageError } = await supabase.storage
           .from("car-images")
-          .upload(fileName, imageFile);
+          .upload(sanitizedFileName, imageFile);
+
+        if (mainImageError) {
+          console.error("Error uploading main image:", mainImageError);
+        }
       }
 
       toast({
