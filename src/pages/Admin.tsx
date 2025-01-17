@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContactSubmissions } from "@/components/admin/ContactSubmissions";
 import { SupportTickets } from "@/components/admin/SupportTickets";
+import { CarsManagement } from "@/components/admin/CarsManagement";
 import { Header } from "@/components/Header";
 
 const Admin = () => {
@@ -17,6 +18,7 @@ const Admin = () => {
           <TabsList className="mb-8">
             <TabsTrigger value="contacts">Заявки</TabsTrigger>
             <TabsTrigger value="support">Тех. поддержка</TabsTrigger>
+            <TabsTrigger value="cars">Автомобили</TabsTrigger>
           </TabsList>
           
           <TabsContent value="contacts">
@@ -25,6 +27,10 @@ const Admin = () => {
 
           <TabsContent value="support">
             <SupportTickets />
+          </TabsContent>
+
+          <TabsContent value="cars">
+            <CarsManagement />
           </TabsContent>
         </Tabs>
       </div>
