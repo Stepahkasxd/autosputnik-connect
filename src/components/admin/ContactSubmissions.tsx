@@ -67,45 +67,50 @@ export const ContactSubmissions = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-xl font-semibold mb-4">Заявки на обратную связь</h2>
+    <div className="bg-card dark:bg-card/40 rounded-lg shadow-lg p-6">
+      <h2 className="text-xl font-semibold mb-4 text-foreground">Заявки на обратную связь</h2>
       
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Дата</TableHead>
-            <TableHead>Имя</TableHead>
-            <TableHead>Предпочтения</TableHead>
-            <TableHead>Планируемая дата</TableHead>
-            <TableHead>Телефон</TableHead>
-            <TableHead>Способ связи</TableHead>
-            <TableHead>Действия</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {submissions.map((submission) => (
-            <TableRow key={submission.id}>
-              <TableCell>{new Date(submission.created_at).toLocaleDateString()}</TableCell>
-              <TableCell>{submission.name}</TableCell>
-              <TableCell>{submission.car_preferences}</TableCell>
-              <TableCell>{new Date(submission.timing).toLocaleDateString()}</TableCell>
-              <TableCell>{submission.phone}</TableCell>
-              <TableCell>
-                {submission.contact_method === 'whatsapp' ? 'WhatsApp' : 'Телефон'}
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleDelete(submission.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
+      <div className="relative overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="border-border/50 dark:border-border/20">
+              <TableHead className="text-muted-foreground">Дата</TableHead>
+              <TableHead className="text-muted-foreground">Имя</TableHead>
+              <TableHead className="text-muted-foreground">Предпочтения</TableHead>
+              <TableHead className="text-muted-foreground">Планируемая дата</TableHead>
+              <TableHead className="text-muted-foreground">Телефон</TableHead>
+              <TableHead className="text-muted-foreground">Способ связи</TableHead>
+              <TableHead className="text-muted-foreground">Действия</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {submissions.map((submission) => (
+              <TableRow 
+                key={submission.id}
+                className="border-border/50 dark:border-border/20 hover:bg-muted/50 dark:hover:bg-muted/20"
+              >
+                <TableCell className="text-foreground">{new Date(submission.created_at).toLocaleDateString()}</TableCell>
+                <TableCell className="text-foreground">{submission.name}</TableCell>
+                <TableCell className="text-foreground">{submission.car_preferences}</TableCell>
+                <TableCell className="text-foreground">{new Date(submission.timing).toLocaleDateString()}</TableCell>
+                <TableCell className="text-foreground">{submission.phone}</TableCell>
+                <TableCell className="text-foreground">
+                  {submission.contact_method === 'whatsapp' ? 'WhatsApp' : 'Телефон'}
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleDelete(submission.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };
