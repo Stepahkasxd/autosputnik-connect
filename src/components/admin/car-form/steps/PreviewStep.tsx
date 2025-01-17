@@ -10,10 +10,14 @@ interface PreviewStepProps {
   isEditing?: boolean;
 }
 
-export const PreviewStep = ({ onComplete, initialData }: PreviewStepProps) => {
+export const PreviewStep = ({ onComplete, initialData, isEditing }: PreviewStepProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onComplete(initialData);
+  };
+
+  const handleClose = () => {
+    onComplete(null);
   };
 
   // Prepare data for preview
@@ -54,10 +58,8 @@ export const PreviewStep = ({ onComplete, initialData }: PreviewStepProps) => {
                 </p>
               </div>
 
-              {/* Preview specifications */}
               <CarSpecs specs={previewData.specs} />
 
-              {/* Preview trims */}
               {previewData.trims.length > 0 && (
                 <div className="space-y-4">
                   <h3 className="text-xl font-semibold">Комплектации</h3>
@@ -84,9 +86,14 @@ export const PreviewStep = ({ onComplete, initialData }: PreviewStepProps) => {
         </Tabs>
       </ScrollArea>
 
-      <Button type="submit" className="w-full">
-        Сохранить
-      </Button>
+      <div className="flex gap-4">
+        <Button type="submit" className="flex-1">
+          {isEditing ? "Сохранить изменения" : "Сохранить"}
+        </Button>
+        <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+          Закрыть
+        </Button>
+      </div>
     </form>
   );
 };

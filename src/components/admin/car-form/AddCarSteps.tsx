@@ -55,6 +55,12 @@ export const AddCarSteps = ({ isEditing = false, initialCarData, onEditComplete 
   }, [isEditing, initialCarData]);
 
   const handleStepComplete = (stepData: any) => {
+    if (stepData === null) {
+      // If PreviewStep was closed without saving
+      handleClose();
+      return;
+    }
+    
     const newFormData = { ...formData, ...stepData };
     setFormData(newFormData);
     
