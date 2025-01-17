@@ -1,131 +1,86 @@
-import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Card } from "@/components/ui/card";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Send } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Car } from "@/data/cars";
-import { CarImage } from "./CarImage";
 import { OrderForm } from "./OrderForm";
-import { CarSpecsDisplay } from "./CarSpecs";
+import { CarSpecs } from "./CarSpecs";
 import { TrimSelector } from "./TrimSelector";
+import { ArrowLeft, Send } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface CarDetailTemplateProps {
   car: Car;
 }
 
 const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
-  const navigate = useNavigate();
-  const [selectedColor, setSelectedColor] = useState(car?.colors[0]);
-  const [selectedTrim, setSelectedTrim] = useState(car?.trims[0]);
-  const [currentImage, setCurrentImage] = useState(car?.image);
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-
-  const allImages = [
-    car.image,
-    ...car.colors
-      .map(color => color.image_url)
-      .filter((url): url is string => url !== undefined && url !== null)
-  ];
-
-  useEffect(() => {
-    if (selectedColor?.image_url) {
-      setCurrentImage(selectedColor.image_url);
-      const newIndex = allImages.findIndex(img => img === selectedColor.image_url);
-      if (newIndex !== -1) {
-        setCurrentImageIndex(newIndex);
-      }
-    } else {
-      setCurrentImage(car.image);
-      setCurrentImageIndex(0);
-    }
-  }, [selectedColor, car.image, allImages]);
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => {
-      const newIndex = prev === allImages.length - 1 ? 0 : prev + 1;
-      setCurrentImage(allImages[newIndex]);
-      return newIndex;
-    });
-  };
-
-  const previousImage = () => {
-    setCurrentImageIndex((prev) => {
-      const newIndex = prev === 0 ? allImages.length - 1 : prev - 1;
-      setCurrentImage(allImages[newIndex]);
-      return newIndex;
-    });
-  };
+  const [selectedTrim, setSelectedTrim] = useState(car.trims[0]);
+  const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
 
   return (
-    <div className="space-y-6 animate-fade-up">
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate(-1)}
-        className="flex items-center gap-2 mb-4 hover:bg-secondary"
-      >
-        <ArrowLeft className="w-4 h-4" />
+    <div className="min-h-screen bg-black text-white">
+      {/* Back Button */}
+      <Link to="/catalog" className="inline-flex items-center text-white hover:text-primary mb-8">
+        <ArrowLeft className="w-5 h-5 mr-2" />
         Назад
-      </Button>
+      </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="space-y-8">
-          <CarImage
-            currentImage={currentImage}
-            allImages={allImages}
-            currentImageIndex={currentImageIndex}
-            onImageClick={() => setIsImageModalOpen(true)}
-            onPreviousClick={previousImage}
-            onNextClick={nextImage}
+      <div className="grid md:grid-cols-2 gap-8">
+        {/* Left Column - Car Image */}
+        <div className="relative aspect-[16/9] rounded-lg overflow-hidden">
+          <img
+            src={car.image || "/placeholder.svg"}
+            alt={car.name}
+            className="w-full h-full object-cover"
           />
-
-          <Dialog open={isOrderModalOpen} onOpenChange={setIsOrderModalOpen}>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Заказать {car.name}</DialogTitle>
-              </DialogHeader>
-              <OrderForm
-                carName={car.name}
-                selectedTrim={selectedTrim}
-                onClose={() => setIsOrderModalOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
         </div>
 
-        <ScrollArea className="h-[calc(100vh-12rem)]">
-          <div className="space-y-8 pr-4">
-            <Card className="p-6 bg-gradient-to-r from-primary/5 to-transparent shadow-lg">
-              <h1 className="text-3xl font-bold mb-2 animate-fade-up">{car.name}</h1>
-              <div className="flex items-center justify-between">
-                <p className="text-2xl font-semibold text-primary animate-fade-up delay-100">
-                  {selectedTrim ? selectedTrim.price : car.basePrice}
-                </p>
-                <Button 
-                  onClick={() => setIsOrderModalOpen(true)}
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-                >
+        {/* Right Column - Car Details */}
+        <div className="space-y-8">
+          {/* Header */}
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">{car.name}</h1>
+              <p className="text-2xl">{selectedTrim?.price || car.basePrice}</p>
+            </div>
+            <Dialog open={isOrderDialogOpen} onOpenChange={setIsOrderDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="bg-primary hover:bg-primary/90">
+                  <Send className="w-5 h-5 mr-2" />
                   Заказать
-                  <Send className="w-4 h-4 ml-2" />
                 </Button>
-              </div>
-            </Card>
-
-            <CarSpecsDisplay specs={car.specs} />
-
-            <TrimSelector
-              trims={car.trims}
-              selectedTrim={selectedTrim}
-              onTrimChange={(trimName) => {
-                const trim = car.trims.find((t) => t.name === trimName);
-                if (trim) setSelectedTrim(trim);
-              }}
-            />
+              </DialogTrigger>
+              <DialogContent>
+                <OrderForm
+                  carName={car.name}
+                  selectedTrim={selectedTrim}
+                  onClose={() => setIsOrderDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
-        </ScrollArea>
+
+          {/* Trims */}
+          {car.trims && car.trims.length > 0 && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <span className="text-primary">✦</span> Комплектации
+              </h2>
+              <TrimSelector
+                trims={car.trims}
+                selectedTrim={selectedTrim}
+                onTrimChange={(trimName) => {
+                  const trim = car.trims.find((t) => t.name === trimName);
+                  if (trim) setSelectedTrim(trim);
+                }}
+              />
+            </div>
+          )}
+
+          {/* Specifications */}
+          {car.specs && Object.keys(car.specs).length > 0 && (
+            <CarSpecs specs={car.specs} />
+          )}
+        </div>
       </div>
     </div>
   );
