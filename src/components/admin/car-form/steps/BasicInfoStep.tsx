@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 interface BasicInfoStepProps {
   onComplete: (data: any) => void;
   initialData: any;
+  isEditing?: boolean;
 }
 
 export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) => {

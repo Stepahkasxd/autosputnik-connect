@@ -7,6 +7,7 @@ import { Plus, X } from "lucide-react";
 interface CustomizationStepProps {
   onComplete: (data: any) => void;
   initialData: any;
+  isEditing?: boolean;
 }
 
 export const CustomizationStep = ({ onComplete, initialData }: CustomizationStepProps) => {
