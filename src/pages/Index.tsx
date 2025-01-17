@@ -38,17 +38,10 @@ const Index = () => {
                 </ul>
               </div>
             </div>
-            <div className="relative fade-up animation-delay-200">
-              <img
-                src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e"
-                alt="Modern car showroom"
-                className="rounded-lg shadow-xl"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
+            <div className="fade-up animation-delay-200">
+              <ContactForm />
             </div>
           </div>
-
-          <ContactForm />
         </section>
       </main>
     </div>
