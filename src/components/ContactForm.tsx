@@ -215,7 +215,7 @@ export const ContactForm = () => {
               "p-3 rounded-lg transition-all duration-300 animate-fade-up",
               message.isUser
                 ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white ml-8"
-                : "bg-white/80 backdrop-blur-sm border border-purple-100 mr-8"
+                : "bg-card dark:bg-card/40 backdrop-blur-sm border border-border/50 dark:border-border/20 mr-8"
             )}
           >
             {message.text}
