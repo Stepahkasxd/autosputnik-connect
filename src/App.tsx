@@ -6,6 +6,8 @@ import Index from "./pages/Index";
 import Services from "./pages/Services";
 import CarDetail from "./pages/CarDetail";
 import Admin from "./pages/Admin";
+import AdminLogin from "./components/admin/AdminLogin";
+import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +21,15 @@ function App() {
             <Route path="/" element={<Index />} />
             <Route path="/services" element={<Services />} />
             <Route path="/car/:id" element={<CarDetail />} />
-            <Route path="/ZZDXDX3DN1MM87IVH0QTYKJPC6160I5PQCZLP24ON96L9POOMW6XTP1L" element={<Admin />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedAdminRoute>
+                  <Admin />
+                </ProtectedAdminRoute>
+              } 
+            />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
