@@ -1,17 +1,18 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Plus, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CarForm } from "./CarForm";
 import { CarsTable } from "./CarsTable";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+} from "@/components/ui/alert-dialog";
 import { Car, CarSpecs } from "@/data/cars";
 import { Json } from "@/integrations/supabase/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,13 +33,13 @@ export const CarManagement = () => {
     const errors: string[] = [];
 
     console.error = (...args) => {
+      const errorMessage = args.join(" ");
+      errors.push(errorMessage);
+      setConsoleErrors([...errors]);
       originalConsoleError.apply(console, args);
-      const errorMessage = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-      ).join(' ');
-      errors.push(`${new Date().toLocaleString()}: ${errorMessage}`);
-      setConsoleErrors(prev => [...prev, `${new Date().toLocaleString()}: ${errorMessage}`]);
     };
+
+    fetchCars();
 
     return () => {
       console.error = originalConsoleError;
@@ -54,36 +55,30 @@ export const CarManagement = () => {
         description: "Пожалуйста, войдите в систему",
         variant: "destructive",
       });
-      navigate("/login");
+      navigate("/admin/login");
     }
   };
 
   const convertJsonToCarSpecs = (specs: Json): CarSpecs => {
     if (typeof specs !== 'object' || !specs) {
-      console.error('Invalid specs format:', specs);
       return {
         acceleration: "",
         power: "",
-        drive: "",
-        range: "",
-        batteryCapacity: "",
+        maxSpeed: "",
         dimensions: "",
-        wheelbase: "",
-        additionalFeatures: [],
+        clearance: "",
+        consumption: "",
+        trunk: "",
       };
     }
-
     return {
-      acceleration: (specs as any).acceleration || "",
-      power: (specs as any).power || "",
-      drive: (specs as any).drive || "",
-      range: (specs as any).range || "",
-      batteryCapacity: (specs as any).batteryCapacity || "",
-      dimensions: (specs as any).dimensions || "",
-      wheelbase: (specs as any).wheelbase || "",
-      additionalFeatures: Array.isArray((specs as any).additionalFeatures) 
-        ? (specs as any).additionalFeatures 
-        : [],
+      acceleration: specs.acceleration?.toString() || "",
+      power: specs.power?.toString() || "",
+      maxSpeed: specs.maxSpeed?.toString() || "",
+      dimensions: specs.dimensions?.toString() || "",
+      clearance: specs.clearance?.toString() || "",
+      consumption: specs.consumption?.toString() || "",
+      trunk: specs.trunk?.toString() || "",
     };
   };
 
@@ -98,25 +93,21 @@ export const CarManagement = () => {
       const { data, error } = await supabase
         .from("cars")
         .select("*");
-      
-      if (error) throw error;
-      
+
+      if (error) {
+        console.error("Error fetching cars:", error);
+        throw error;
+      }
+
       if (data) {
-        const convertedCars: Car[] = data.map(car => ({
-          id: car.id,
-          name: car.name,
-          basePrice: car.base_price,
-          image: car.image_url || "/placeholder.svg",
+        const formattedCars = data.map(car => ({
+          ...car,
           specs: convertJsonToCarSpecs(car.specs),
-          colors: [],
-          interiors: [],
-          trims: []
         }));
-        
-        setCars(convertedCars);
+        setCars(formattedCars);
       }
     } catch (error) {
-      console.error("Error fetching cars:", error);
+      console.error("Error in fetchCars:", error);
       toast({
         title: "Ошибка",
         description: "Не удалось загрузить список автомобилей",
@@ -124,10 +115,6 @@ export const CarManagement = () => {
       });
     }
   };
-
-  useEffect(() => {
-    fetchCars();
-  }, []);
 
   const handleDelete = async (id: string) => {
     try {
@@ -146,15 +133,14 @@ export const CarManagement = () => {
         .from("cars")
         .delete()
         .eq("id", id);
-      
+
       if (error) throw error;
 
+      setCars(cars.filter(car => car.id !== id));
       toast({
-        title: "Автомобиль удален",
-        description: "Автомобиль был успешно удален из каталога",
+        title: "Успешно",
+        description: "Автомобиль удален",
       });
-      
-      fetchCars();
     } catch (error) {
       console.error("Error deleting car:", error);
       toast({
@@ -166,61 +152,15 @@ export const CarManagement = () => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Управление автомобилями</h2>
-        <div className="flex gap-4">
-          <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                Журнал ошибок
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh]">
-              <DialogHeader>
-                <DialogTitle>Журнал ошибок консоли</DialogTitle>
-              </DialogHeader>
-              <ScrollArea className="h-[500px] w-full rounded-md border p-4">
-                {consoleErrors.length > 0 ? (
-                  consoleErrors.map((error, index) => (
-                    <div key={index} className="mb-4 p-2 bg-red-50 rounded">
-                      <pre className="whitespace-pre-wrap text-sm text-red-600">{error}</pre>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500">Ошибок пока нет</p>
-                )}
-              </ScrollArea>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={() => {
-                setSelectedCar(null);
-              }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Добавить автомобиль
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>
-                  {selectedCar ? "Редактировать автомобиль" : "Добавить автомобиль"}
-                </DialogTitle>
-              </DialogHeader>
-              <CarForm
-                selectedCar={selectedCar}
-                onSuccess={() => {
-                  setIsDialogOpen(false);
-                  fetchCars();
-                }}
-                onCancel={() => setIsDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Управление автомобилями</h2>
+        <Button onClick={() => {
+          setSelectedCar(null);
+          setIsDialogOpen(true);
+        }}>
+          Добавить автомобиль
+        </Button>
       </div>
 
       <CarsTable
@@ -231,8 +171,38 @@ export const CarManagement = () => {
         }}
         onDelete={handleDelete}
       />
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <CarForm
+            selectedCar={selectedCar}
+            onSuccess={() => {
+              setIsDialogOpen(false);
+              fetchCars();
+            }}
+            onCancel={() => setIsDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Консоль ошибок</AlertDialogTitle>
+            <AlertDialogDescription>
+              <ScrollArea className="h-[300px] w-full rounded-md border p-4">
+                {consoleErrors.map((error, index) => (
+                  <Alert key={index} variant="destructive" className="mb-2">
+                    <AlertDescription>
+                      {error}
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </ScrollArea>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
-
-export default CarManagement;
