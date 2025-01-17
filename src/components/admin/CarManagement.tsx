@@ -60,23 +60,26 @@ export const CarManagement = () => {
   };
 
   const convertJsonToCarSpecs = (specs: Json): CarSpecs => {
-    if (typeof specs !== 'object' || !specs) {
+    if (typeof specs !== 'object' || !specs || Array.isArray(specs)) {
       return {};
     }
+
+    const specsObj = specs as Record<string, Json>;
+    
     return {
-      acceleration: specs.acceleration?.toString(),
-      power: specs.power?.toString(),
-      maxSpeed: specs.maxSpeed?.toString(),
-      dimensions: specs.dimensions?.toString(),
-      clearance: specs.clearance?.toString(),
-      consumption: specs.consumption?.toString(),
-      trunk: specs.trunk?.toString(),
-      drive: specs.drive?.toString(),
-      range: specs.range?.toString(),
-      batteryCapacity: specs.batteryCapacity?.toString(),
-      wheelbase: specs.wheelbase?.toString(),
-      additionalFeatures: Array.isArray(specs.additionalFeatures) 
-        ? specs.additionalFeatures.map(String)
+      acceleration: specsObj.acceleration?.toString(),
+      power: specsObj.power?.toString(),
+      maxSpeed: specsObj.maxSpeed?.toString(),
+      dimensions: specsObj.dimensions?.toString(),
+      clearance: specsObj.clearance?.toString(),
+      consumption: specsObj.consumption?.toString(),
+      trunk: specsObj.trunk?.toString(),
+      drive: specsObj.drive?.toString(),
+      range: specsObj.range?.toString(),
+      batteryCapacity: specsObj.batteryCapacity?.toString(),
+      wheelbase: specsObj.wheelbase?.toString(),
+      additionalFeatures: Array.isArray(specsObj.additionalFeatures) 
+        ? specsObj.additionalFeatures.map(String)
         : undefined,
     };
   };
