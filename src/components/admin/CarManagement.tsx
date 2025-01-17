@@ -20,18 +20,15 @@ export const CarManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const checkAuth = () => {
-    const isAuthenticated = localStorage.getItem("isAdminAuthenticated") === "true";
-    if (!isAuthenticated) {
-      navigate("/admin/login");
-    }
-    return isAuthenticated;
-  };
-
   const fetchCars = async () => {
-    if (!checkAuth()) return;
-
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log("No active session, redirecting to login");
+        navigate("/admin/login");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("cars")
         .select(`
@@ -84,8 +81,6 @@ export const CarManagement = () => {
   };
 
   const handleDeleteCar = async (carId: string) => {
-    if (!checkAuth()) return;
-
     try {
       const { error } = await supabase
         .from("cars")
