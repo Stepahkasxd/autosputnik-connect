@@ -9,7 +9,14 @@ const fetchCars = async () => {
   console.log("Fetching cars from Supabase...");
   const { data, error } = await supabase
     .from("cars")
-    .select("*")
+    .select(`
+      *,
+      car_trims (
+        name,
+        price,
+        specs
+      )
+    `)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -64,6 +71,8 @@ const Catalog = () => {
                   name={car.name}
                   price={car.base_price}
                   image={car.image_url || "/placeholder.svg"}
+                  specs={car.specs || {}}
+                  trims={car.car_trims}
                 />
               ))}
             </div>
