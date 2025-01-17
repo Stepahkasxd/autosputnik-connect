@@ -14,6 +14,12 @@ export const CarsManagement = () => {
     e.preventDefault();
     
     try {
+      // Check authentication first
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
       console.log("Adding new car:", { name, basePrice });
       
       const { error } = await supabase
