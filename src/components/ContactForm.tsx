@@ -1,17 +1,19 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/use-toast";
-import { MessageSquare, Phone } from "lucide-react";
+import { MessageSquare, Phone, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 type Step = "welcome" | "name" | "car" | "timing" | "contact";
 
 interface ChatMessage {
   text: string;
   isUser?: boolean;
+  isTyping?: boolean;
 }
 
 export const ContactForm = () => {
@@ -26,6 +28,28 @@ export const ContactForm = () => {
     phone: "",
     contactMethod: "whatsapp"
   });
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const simulateTyping = async (text: string, isUser = false) => {
+    const tempMessage = { text: "", isTyping: true, isUser };
+    setMessages(prev => [...prev, tempMessage]);
+    
+    // Add the message with typing animation
+    const newMessage = { text, isUser, isTyping: false };
+    setMessages(prev => [...prev.slice(0, -1), newMessage]);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +91,12 @@ export const ContactForm = () => {
     }
   };
 
-  const addMessage = (text: string, isUser = false) => {
-    setMessages(prev => [...prev, { text, isUser }]);
+  const addMessage = async (text: string, isUser = false) => {
+    if (isUser) {
+      setMessages(prev => [...prev, { text, isUser }]);
+    } else {
+      await simulateTyping(text);
+    }
   };
 
   const renderInput = () => {
@@ -80,9 +108,10 @@ export const ContactForm = () => {
               addMessage("Напишите, пожалуйста, ваше имя");
               setStep("name");
             }}
-            className="w-full"
+            className="w-full flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 transition-all duration-300"
           >
             Начать общение
+            <Send className="w-4 h-4" />
           </Button>
         );
       case "name":
@@ -100,7 +129,10 @@ export const ContactForm = () => {
               placeholder="Ваше имя"
               className="mb-2"
             />
-            <Button type="submit" className="w-full">Далее</Button>
+            <Button type="submit" className="w-full flex items-center gap-2">
+              Далее
+              <Send className="w-4 h-4" />
+            </Button>
           </form>
         );
       case "car":
@@ -118,7 +150,10 @@ export const ContactForm = () => {
               placeholder="Опишите желаемый автомобиль"
               className="mb-2"
             />
-            <Button type="submit" className="w-full">Далее</Button>
+            <Button type="submit" className="w-full flex items-center gap-2">
+              Далее
+              <Send className="w-4 h-4" />
+            </Button>
           </form>
         );
       case "timing":
@@ -136,7 +171,10 @@ export const ContactForm = () => {
               onChange={(e) => setFormData({ ...formData, timing: e.target.value })}
               className="mb-2"
             />
-            <Button type="submit" className="w-full">Далее</Button>
+            <Button type="submit" className="w-full flex items-center gap-2">
+              Далее
+              <Send className="w-4 h-4" />
+            </Button>
           </form>
         );
       case "contact":
@@ -169,7 +207,10 @@ export const ContactForm = () => {
                 </Label>
               </div>
             </RadioGroup>
-            <Button type="submit" className="w-full">Отправить</Button>
+            <Button type="submit" className="w-full flex items-center gap-2">
+              Отправить
+              <Send className="w-4 h-4" />
+            </Button>
           </form>
         );
     }
@@ -177,19 +218,33 @@ export const ContactForm = () => {
 
   return (
     <div className="glass-card p-6 rounded-lg max-w-md mx-auto space-y-6 fade-up">
-      <div className="space-y-4 max-h-[400px] overflow-y-auto mb-4">
+      <div 
+        ref={chatContainerRef}
+        className="space-y-4 max-h-[400px] overflow-y-auto mb-4 scroll-smooth"
+      >
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`p-3 rounded-lg ${
+            className={cn(
+              "p-3 rounded-lg transition-all duration-300 animate-fade-up",
               message.isUser
-                ? "bg-primary text-primary-foreground ml-8"
-                : "bg-muted mr-8"
-            }`}
+                ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white ml-8"
+                : "bg-white/80 backdrop-blur-sm border border-purple-100 mr-8",
+              message.isTyping && "opacity-70"
+            )}
           >
-            {message.text}
+            {message.isTyping ? (
+              <div className="flex space-x-2">
+                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 bg-gray-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+              </div>
+            ) : (
+              message.text
+            )}
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
       {renderInput()}
     </div>
