@@ -1,11 +1,11 @@
-import { Car } from "@/data/cars";
 import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { 
   Battery, 
@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { Car } from "@/data/cars";
 
 interface CarDetailTemplateProps {
   car: Car;
@@ -45,17 +46,13 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
   ];
 
   useEffect(() => {
-    console.log("Selected color changed:", selectedColor);
     if (selectedColor?.image_url) {
-      console.log("Setting image to color image:", selectedColor.image_url);
       setCurrentImage(selectedColor.image_url);
-      // Update current image index for the gallery
       const newIndex = allImages.findIndex(img => img === selectedColor.image_url);
       if (newIndex !== -1) {
         setCurrentImageIndex(newIndex);
       }
     } else {
-      console.log("Setting image to default car image:", car.image);
       setCurrentImage(car.image);
       setCurrentImageIndex(0);
     }
@@ -84,6 +81,19 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
   // Helper function to check if a spec exists and has a value
   const hasSpec = (spec: string | undefined | null): boolean => {
     return spec !== undefined && spec !== null && spec !== '';
+  };
+
+  // Helper function to render specifications
+  const renderSpecs = (specs: Record<string, string>) => {
+    return Object.entries(specs).map(([key, value]) => (
+      <div key={key} className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
+        <CheckCircle2 className="w-5 h-5 text-primary" />
+        <div>
+          <p className="text-sm text-muted-foreground">{key}</p>
+          <p className="font-semibold">{value}</p>
+        </div>
+      </div>
+    ));
   };
 
   return (
@@ -218,106 +228,118 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
         </div>
 
         {/* Right Column - Details */}
-        <div className="space-y-8">
-          <Card className="p-6 bg-gradient-to-r from-primary/5 to-transparent shadow-lg">
-            <h1 className="text-3xl font-bold mb-2 animate-fade-up">{car.name}</h1>
-            <p className="text-2xl font-semibold text-primary animate-fade-up delay-100">{car.basePrice}</p>
-          </Card>
+        <ScrollArea className="h-[calc(100vh-12rem)]">
+          <div className="space-y-8 pr-4">
+            <Card className="p-6 bg-gradient-to-r from-primary/5 to-transparent shadow-lg">
+              <h1 className="text-3xl font-bold mb-2 animate-fade-up">{car.name}</h1>
+              <p className="text-2xl font-semibold text-primary animate-fade-up delay-100">
+                {selectedTrim ? selectedTrim.price : car.basePrice}
+              </p>
+            </Card>
 
-          <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Интерьер</h3>
-            </div>
-            <RadioGroup value={selectedInterior} onValueChange={setSelectedInterior}>
-              {car.interiors.map((interior) => (
-                <div key={interior.name} className="flex items-center space-x-2 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value={interior.name} id={interior.name} />
-                  <Label htmlFor={interior.name} className="font-medium">{interior.name}</Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </Card>
+            <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Интерьер</h3>
+              </div>
+              <RadioGroup value={selectedInterior} onValueChange={setSelectedInterior}>
+                {car.interiors.map((interior) => (
+                  <div key={interior.name} className="flex items-center space-x-2 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <RadioGroupItem value={interior.name} id={interior.name} />
+                    <Label htmlFor={interior.name} className="font-medium">{interior.name}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </Card>
 
-          {/* Dynamic Specifications Section */}
-          <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Характеристики</h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {hasSpec(car.specs.power) && (
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-                  <Zap className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Мощность</p>
-                    <p className="font-semibold">{car.specs.power}</p>
+            {/* Base Specifications */}
+            <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Базовые характеристики</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {hasSpec(car.specs.power) && (
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
+                    <Zap className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Мощность</p>
+                      <p className="font-semibold">{car.specs.power}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-              {hasSpec(car.specs.acceleration) && (
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-                  <Timer className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Разгон</p>
-                    <p className="font-semibold">{car.specs.acceleration}</p>
+                )}
+                {hasSpec(car.specs.acceleration) && (
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
+                    <Timer className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Разгон</p>
+                      <p className="font-semibold">{car.specs.acceleration}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-              {hasSpec(car.specs.batteryCapacity) && (
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-                  <Battery className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Батарея</p>
-                    <p className="font-semibold">{car.specs.batteryCapacity}</p>
+                )}
+                {hasSpec(car.specs.batteryCapacity) && (
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
+                    <Battery className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Батарея</p>
+                      <p className="font-semibold">{car.specs.batteryCapacity}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-              {hasSpec(car.specs.range) && (
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-                  <Gauge className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Запас хода</p>
-                    <p className="font-semibold">{car.specs.range}</p>
+                )}
+                {hasSpec(car.specs.range) && (
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
+                    <Gauge className="w-5 h-5 text-primary" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Запас хода</p>
+                      <p className="font-semibold">{car.specs.range}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          </Card>
+                )}
+              </div>
+            </Card>
 
-          <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Комплектации</h3>
-            </div>
-            <RadioGroup
-              value={selectedTrim?.name}
-              onValueChange={(value) => {
-                const trim = car.trims.find((t) => t.name === value);
-                if (trim) setSelectedTrim(trim);
-              }}
-              className="space-y-4"
-            >
-              {car.trims.map((trim) => (
-                <div
-                  key={trim.name}
-                  className={cn(
-                    "flex items-center justify-between p-4 rounded-lg border transition-all duration-300",
-                    selectedTrim?.name === trim.name
-                      ? "border-primary bg-primary/5 shadow-md"
-                      : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
-                  )}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value={trim.name} id={trim.name} />
-                    <Label htmlFor={trim.name} className="font-medium">{trim.name}</Label>
+            {/* Trims with Specifications */}
+            <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold">Комплектации</h3>
+              </div>
+              <RadioGroup
+                value={selectedTrim?.name}
+                onValueChange={(value) => {
+                  const trim = car.trims.find((t) => t.name === value);
+                  if (trim) setSelectedTrim(trim);
+                }}
+                className="space-y-4"
+              >
+                {car.trims.map((trim) => (
+                  <div
+                    key={trim.name}
+                    className={cn(
+                      "p-4 rounded-lg border transition-all duration-300",
+                      selectedTrim?.name === trim.name
+                        ? "border-primary bg-primary/5 shadow-md"
+                        : "border-gray-200 hover:border-gray-300 hover:shadow-sm"
+                    )}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value={trim.name} id={trim.name} />
+                        <Label htmlFor={trim.name} className="font-medium">{trim.name}</Label>
+                      </div>
+                      <span className="font-semibold text-primary">{trim.price}</span>
+                    </div>
+                    {trim.specs && Object.keys(trim.specs).length > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        {renderSpecs(trim.specs)}
+                      </div>
+                    )}
                   </div>
-                  <span className="font-semibold text-primary">{trim.price}</span>
-                </div>
-              ))}
-            </RadioGroup>
-          </Card>
-        </div>
+                ))}
+              </RadioGroup>
+            </Card>
+          </div>
+        </ScrollArea>
       </div>
     </div>
   );
