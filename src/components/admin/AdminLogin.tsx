@@ -60,10 +60,10 @@ export const AdminLogin = () => {
 
       console.log("Admin credentials valid, attempting Supabase login...");
 
-      // Then sign in with Supabase
+      // Then sign in with Supabase using the new credentials
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: "admin@example.com",
-        password: "admin123",
+        email: "root@su.com",
+        password: ADMIN_PASSWORD,
       });
 
       if (error) {
