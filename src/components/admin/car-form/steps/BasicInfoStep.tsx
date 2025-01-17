@@ -33,6 +33,7 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
     "Клиренс",
     "Колесная база",
     "Масса",
+    "Тип кузова", // Added new body type characteristic
   ];
 
   const addTrim = () => {
