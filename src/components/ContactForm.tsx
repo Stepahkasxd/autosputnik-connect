@@ -13,8 +13,6 @@ type Step = "welcome" | "name" | "car" | "timing" | "contact";
 interface ChatMessage {
   text: string;
   isUser?: boolean;
-  isTyping?: boolean;
-  displayedText?: string;
 }
 
 export const ContactForm = () => {
@@ -40,49 +38,11 @@ export const ContactForm = () => {
   };
 
   useEffect(() => {
-    const lastMessage = messages[messages.length - 1];
-    if (!lastMessage?.isUser && lastMessage?.text) {
-      let currentText = "";
-      const words = lastMessage.text.split(" ");
-      let wordIndex = 0;
-
-      const typeNextWord = () => {
-        if (wordIndex < words.length) {
-          currentText += (wordIndex > 0 ? " " : "") + words[wordIndex];
-          setMessages(prev => 
-            prev.map((msg, idx) => 
-              idx === prev.length - 1 
-                ? { ...msg, displayedText: currentText, isTyping: true }
-                : msg
-            )
-          );
-          wordIndex++;
-          setTimeout(typeNextWord, 100);
-          scrollToBottom();
-        } else {
-          // Когда печатание закончено, убираем флаг isTyping
-          setMessages(prev => 
-            prev.map((msg, idx) => 
-              idx === prev.length - 1 
-                ? { ...msg, isTyping: false }
-                : msg
-            )
-          );
-        }
-      };
-
-      typeNextWord();
-    } else {
-      scrollToBottom();
-    }
+    scrollToBottom();
   }, [messages]);
 
-  const simulateTyping = async (text: string, isUser = false) => {
-    if (isUser) {
-      setMessages(prev => [...prev, { text, isUser, displayedText: text }]);
-    } else {
-      setMessages(prev => [...prev, { text, isUser, displayedText: "", isTyping: true }]);
-    }
+  const addMessage = (text: string, isUser = false) => {
+    setMessages(prev => [...prev, { text, isUser }]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,10 +82,6 @@ export const ContactForm = () => {
         variant: "destructive"
       });
     }
-  };
-
-  const addMessage = async (text: string, isUser = false) => {
-    await simulateTyping(text, isUser);
   };
 
   const renderInput = () => {
@@ -262,7 +218,7 @@ export const ContactForm = () => {
                 : "bg-white/80 backdrop-blur-sm border border-purple-100 mr-8"
             )}
           >
-            {message.isUser ? message.text : (message.displayedText || "")}
+            {message.text}
           </div>
         ))}
         <div ref={messagesEndRef} />
