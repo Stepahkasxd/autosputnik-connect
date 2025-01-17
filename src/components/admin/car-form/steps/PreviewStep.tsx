@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CarSpecs } from "@/components/cars/CarSpecs";
 
 interface PreviewStepProps {
-  onComplete: (data: any) => void;
+  onComplete: (data: any, shouldClose?: boolean) => void;
   initialData: any;
   isEditing?: boolean;
 }
@@ -13,11 +13,11 @@ interface PreviewStepProps {
 export const PreviewStep = ({ onComplete, initialData, isEditing }: PreviewStepProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onComplete(initialData);
+    onComplete(initialData, false); // Pass false to indicate not to close
   };
 
   const handleClose = () => {
-    onComplete(null);
+    onComplete(null, true); // Pass true to indicate should close
   };
 
   // Prepare data for preview

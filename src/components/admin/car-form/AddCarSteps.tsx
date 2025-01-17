@@ -54,7 +54,7 @@ export const AddCarSteps = ({ isEditing = false, initialCarData, onEditComplete 
     }
   }, [isEditing, initialCarData]);
 
-  const handleStepComplete = (stepData: any) => {
+  const handleStepComplete = (stepData: any, shouldClose?: boolean) => {
     if (stepData === null) {
       // If PreviewStep was closed without saving
       handleClose();
@@ -70,7 +70,11 @@ export const AddCarSteps = ({ isEditing = false, initialCarData, onEditComplete 
       formData: newFormData,
     }));
     
-    setStep(step + 1);
+    if (shouldClose) {
+      handleClose();
+    } else if (step < 4) {
+      setStep(step + 1);
+    }
   };
 
   const handleClose = () => {
@@ -114,7 +118,7 @@ export const AddCarSteps = ({ isEditing = false, initialCarData, onEditComplete 
       case 3:
         return <ImagesStep onComplete={handleStepComplete} initialData={formData} isEditing={isEditing} />;
       case 4:
-        return <PreviewStep onComplete={handleClose} initialData={formData} isEditing={isEditing} />;
+        return <PreviewStep onComplete={handleStepComplete} initialData={formData} isEditing={isEditing} />;
       default:
         return null;
     }
