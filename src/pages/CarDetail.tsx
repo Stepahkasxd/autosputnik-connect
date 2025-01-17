@@ -44,7 +44,6 @@ const fetchCarById = async (id: string): Promise<Car> => {
     throw trimError;
   }
 
-  // Add interior fetch
   const { data: interiorData, error: interiorError } = await supabase
     .from("car_interiors")
     .select("*")
@@ -56,6 +55,17 @@ const fetchCarById = async (id: string): Promise<Car> => {
   }
 
   console.log("Fetched car details:", { carData, colorData, trimData, interiorData });
+
+  // Helper function to convert JSONB specs to Record<string, string>
+  const convertSpecs = (specs: any): Record<string, string> => {
+    if (!specs || typeof specs !== 'object') return {};
+    
+    const converted: Record<string, string> = {};
+    Object.entries(specs).forEach(([key, value]) => {
+      converted[key] = String(value); // Convert all values to strings
+    });
+    return converted;
+  };
 
   const car: Car = {
     id: carData.id,
@@ -73,7 +83,7 @@ const fetchCarById = async (id: string): Promise<Car> => {
     trims: trimData.map((trim) => ({
       name: trim.name,
       price: trim.price,
-      specs: trim.specs || {},
+      specs: convertSpecs(trim.specs),
     })) || [],
     specs: carData.specs as CarSpecs || {},
   };
