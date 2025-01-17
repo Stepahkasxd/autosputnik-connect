@@ -237,6 +237,7 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
               </p>
             </Card>
 
+            {/* Interior Selection */}
             <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
@@ -259,42 +260,15 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
                 <h3 className="text-lg font-semibold">Базовые характеристики</h3>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {hasSpec(car.specs.power) && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-                    <Zap className="w-5 h-5 text-primary" />
+                {car.specs && Object.entries(car.specs).map(([key, value]) => (
+                  <div key={key} className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Мощность</p>
-                      <p className="font-semibold">{car.specs.power}</p>
+                      <p className="text-sm text-muted-foreground">{key}</p>
+                      <p className="font-semibold">{value}</p>
                     </div>
                   </div>
-                )}
-                {hasSpec(car.specs.acceleration) && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-                    <Timer className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Разгон</p>
-                      <p className="font-semibold">{car.specs.acceleration}</p>
-                    </div>
-                  </div>
-                )}
-                {hasSpec(car.specs.batteryCapacity) && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-                    <Battery className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Батарея</p>
-                      <p className="font-semibold">{car.specs.batteryCapacity}</p>
-                    </div>
-                  </div>
-                )}
-                {hasSpec(car.specs.range) && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
-                    <Gauge className="w-5 h-5 text-primary" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Запас хода</p>
-                      <p className="font-semibold">{car.specs.range}</p>
-                    </div>
-                  </div>
-                )}
+                ))}
               </div>
             </Card>
 
