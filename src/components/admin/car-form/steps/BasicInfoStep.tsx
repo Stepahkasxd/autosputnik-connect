@@ -175,13 +175,14 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
               <div key={specKey} className="flex gap-2 items-start">
                 <Select
                   value={specKey}
-                  onValueChange={(value) => {
-                    const oldValue = baseSpecs[specKey];
-                    removeBaseSpec(specKey);
-                    setBaseSpecs({
-                      ...baseSpecs,
-                      [value]: oldValue,
-                    });
+                  onValueChange={(newValue) => {
+                    if (newValue !== specKey) {
+                      const oldValue = baseSpecs[specKey];
+                      const updatedSpecs = { ...baseSpecs };
+                      delete updatedSpecs[specKey];
+                      updatedSpecs[newValue] = oldValue;
+                      setBaseSpecs(updatedSpecs);
+                    }
                   }}
                 >
                   <SelectTrigger className="w-[200px]">
@@ -189,7 +190,7 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
                   </SelectTrigger>
                   <SelectContent>
                     {[specKey, ...availableSpecs.filter(
-                      (spec) => !Object.keys(baseSpecs).includes(spec)
+                      (spec) => !Object.keys(baseSpecs).includes(spec) || spec === specKey
                     )].map((spec) => (
                       <SelectItem key={spec} value={spec}>
                         {spec}
@@ -275,15 +276,16 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
                     <div key={specKey} className="flex gap-2 items-start">
                       <Select
                         value={specKey}
-                        onValueChange={(value) => {
-                          const oldValue = trim.specs[specKey];
-                          removeSpecFromTrim(trimIndex, specKey);
-                          const newTrims = [...trims];
-                          newTrims[trimIndex].specs = {
-                            ...newTrims[trimIndex].specs,
-                            [value]: oldValue,
-                          };
-                          setTrims(newTrims);
+                        onValueChange={(newValue) => {
+                          if (newValue !== specKey) {
+                            const oldValue = trim.specs[specKey];
+                            const updatedSpecs = { ...trim.specs };
+                            delete updatedSpecs[specKey];
+                            updatedSpecs[newValue] = oldValue;
+                            const newTrims = [...trims];
+                            newTrims[trimIndex].specs = updatedSpecs;
+                            setTrims(newTrims);
+                          }
                         }}
                       >
                         <SelectTrigger className="w-[200px]">
@@ -291,7 +293,7 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
                         </SelectTrigger>
                         <SelectContent>
                           {[specKey, ...availableSpecs.filter(
-                            (spec) => !Object.keys(trim.specs).includes(spec)
+                            (spec) => !Object.keys(trim.specs).includes(spec) || spec === specKey
                           )].map((spec) => (
                             <SelectItem key={spec} value={spec}>
                               {spec}
