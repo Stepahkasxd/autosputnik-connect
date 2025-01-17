@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+
+const ADMIN_USERNAME = "root";
+const ADMIN_PASSWORD = "ZZDXDX3DN1MM87IVH0QTYKJPC6160I5PQCZLP24ON96L9POOMW6XTP1L";
 
 export const AdminLogin = () => {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -17,21 +19,17 @@ export const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      if (data.session) {
+      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        localStorage.setItem("isAdminAuthenticated", "true");
         navigate("/admin");
+      } else {
+        throw new Error("Invalid credentials");
       }
     } catch (error) {
       console.error("Error logging in:", error);
       toast({
         title: "Ошибка авторизации",
-        description: "Неверный email или пароль",
+        description: "Неверный логин или пароль",
         variant: "destructive",
       });
     } finally {
@@ -46,14 +44,14 @@ export const AdminLogin = () => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              Логин
             </label>
             <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
