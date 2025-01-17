@@ -189,13 +189,13 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
                     <SelectValue placeholder="Выберите характеристику" />
                   </SelectTrigger>
                   <SelectContent>
-                    {[specKey, ...availableSpecs.filter(
-                      (spec) => !Object.keys(baseSpecs).includes(spec) || spec === specKey
-                    )].map((spec) => (
-                      <SelectItem key={spec} value={spec}>
-                        {spec}
-                      </SelectItem>
-                    ))}
+                    {availableSpecs
+                      .filter(spec => spec === specKey || !Object.keys(baseSpecs).includes(spec))
+                      .map((spec) => (
+                        <SelectItem key={spec} value={spec}>
+                          {spec}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <Input
@@ -292,13 +292,13 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
                           <SelectValue placeholder="Выберите характеристику" />
                         </SelectTrigger>
                         <SelectContent>
-                          {[specKey, ...availableSpecs.filter(
-                            (spec) => !Object.keys(trim.specs).includes(spec) || spec === specKey
-                          )].map((spec) => (
-                            <SelectItem key={spec} value={spec}>
-                              {spec}
-                            </SelectItem>
-                          ))}
+                          {availableSpecs
+                            .filter(spec => spec === specKey || !Object.keys(trim.specs).includes(spec))
+                            .map((spec) => (
+                              <SelectItem key={spec} value={spec}>
+                                {spec}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <Input
