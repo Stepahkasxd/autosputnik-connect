@@ -8,7 +8,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Car } from "@/data/cars";
+import { Database } from "@/integrations/supabase/types";
+
+type Car = Database["public"]["Tables"]["cars"]["Row"] & {
+  car_colors: Database["public"]["Tables"]["car_colors"]["Row"][];
+  car_trims: Database["public"]["Tables"]["car_trims"]["Row"][];
+};
 
 interface CarsTableProps {
   cars: Car[];
@@ -30,7 +35,7 @@ export const CarsTable = ({ cars, onEdit, onDelete }: CarsTableProps) => {
         {cars.map((car) => (
           <TableRow key={car.id}>
             <TableCell>{car.name}</TableCell>
-            <TableCell>{car.basePrice}</TableCell>
+            <TableCell>{car.base_price}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
                 <Button

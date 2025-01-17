@@ -5,12 +5,18 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { CarForm } from "./CarForm";
 import { CarsTable } from "./CarsTable";
-import { Car } from "@/integrations/supabase/types";
+import { Database } from "@/integrations/supabase/types";
+
+type Car = Database["public"]["Tables"]["cars"]["Row"] & {
+  car_colors: Database["public"]["Tables"]["car_colors"]["Row"][];
+  car_trims: Database["public"]["Tables"]["car_trims"]["Row"][];
+};
 
 export const CarManagement = () => {
   const [cars, setCars] = useState<Car[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingCar, setIsAddingCar] = useState(false);
+  const [editingCar, setEditingCar] = useState<Car | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -103,6 +109,10 @@ export const CarManagement = () => {
     }
   };
 
+  const handleEditCar = (car: Car) => {
+    setEditingCar(car);
+  };
+
   useEffect(() => {
     fetchCars();
   }, []);
@@ -120,16 +130,25 @@ export const CarManagement = () => {
         </Button>
       </div>
 
-      {isAddingCar ? (
+      {isAddingCar || editingCar ? (
         <CarForm
+          car={editingCar}
           onSuccess={() => {
             setIsAddingCar(false);
+            setEditingCar(null);
             fetchCars();
           }}
-          onCancel={() => setIsAddingCar(false)}
+          onCancel={() => {
+            setIsAddingCar(false);
+            setEditingCar(null);
+          }}
         />
       ) : (
-        <CarsTable cars={cars} onDelete={handleDeleteCar} />
+        <CarsTable 
+          cars={cars} 
+          onDelete={handleDeleteCar}
+          onEdit={handleEditCar}
+        />
       )}
     </div>
   );
