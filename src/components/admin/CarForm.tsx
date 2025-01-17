@@ -56,7 +56,7 @@ const clearStoredFormData = () => {
 
 export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
   const { toast } = useToast();
-  const [formKey, setFormKey] = useState(Date.now()); // Used to reset form fields
+  const [formKey, setFormKey] = useState(Date.now());
   const [specs, setSpecs] = useState<CarSpecs>(
     selectedCar?.specs || getStoredFormData()?.specs || {
       acceleration: "",
@@ -171,6 +171,20 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
+
+    // Check authentication status
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    
+    if (authError || !session) {
+      console.error("Authentication error:", authError);
+      toast({
+        title: "Ошибка аутентификации",
+        description: "Пожалуйста, войдите в систему",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const formData = new FormData(event.target as HTMLFormElement);
     const name = formData.get("name")?.toString() || "";
     const basePrice = formData.get("price")?.toString() || "";
@@ -188,6 +202,8 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
 
     try {
       console.log("Starting car save process...");
+      console.log("User is authenticated:", session.user.id);
+      
       let carId;
       if (selectedCar) {
         console.log("Updating existing car:", selectedCar.id);
@@ -225,6 +241,7 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
         console.log("New car created with ID:", carId);
       }
 
+      if (carId) {
         if (selectedCar) {
           console.log("Deleting existing colors for car:", carId);
           await supabase
@@ -307,8 +324,9 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
             console.error("Error inserting trims:", trimsError);
           }
         }
+      }
 
-      clearStoredFormData(); // Clear stored form data after successful save
+      clearStoredFormData();
       toast({
         title: selectedCar ? "Автомобиль обновлен" : "Автомобиль добавлен",
         description: "Изменения успешно сохранены",

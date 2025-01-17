@@ -15,17 +15,19 @@ import { CarsTable } from "./CarsTable";
 import { Car, CarSpecs } from "@/data/cars";
 import { Json } from "@/integrations/supabase/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "react-router-dom";
 
 export const CarManagement = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<Car | null>(null);
   const [cars, setCars] = useState<Car[]>([]);
   const [consoleErrors, setConsoleErrors] = useState<string[]>([]);
 
-  // Перехватываем ошибки консоли
   useEffect(() => {
+    checkAuth();
     const originalConsoleError = console.error;
     const errors: string[] = [];
 
@@ -42,6 +44,19 @@ export const CarManagement = () => {
       console.error = originalConsoleError;
     };
   }, []);
+
+  const checkAuth = async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error || !session) {
+      console.error("Authentication error:", error);
+      toast({
+        title: "Ошибка аутентификации",
+        description: "Пожалуйста, войдите в систему",
+        variant: "destructive",
+      });
+      navigate("/login");
+    }
+  };
 
   const convertJsonToCarSpecs = (specs: Json): CarSpecs => {
     if (typeof specs !== 'object' || !specs) {
@@ -74,6 +89,12 @@ export const CarManagement = () => {
 
   const fetchCars = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("No active session");
+        return;
+      }
+
       const { data, error } = await supabase
         .from("cars")
         .select("*");
@@ -110,6 +131,17 @@ export const CarManagement = () => {
 
   const handleDelete = async (id: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error("No active session");
+        toast({
+          title: "Ошибка аутентификации",
+          description: "Пожалуйста, войдите в систему",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from("cars")
         .delete()
