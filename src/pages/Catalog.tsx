@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { CarCard } from "@/components/CarCard";
 import { useToast } from "@/components/ui/use-toast";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
