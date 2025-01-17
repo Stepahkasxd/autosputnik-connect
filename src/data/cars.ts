@@ -1,7 +1,7 @@
 export interface CarColor {
   name: string;
   code: string;
-  image_url?: string; // Added this property as optional
+  image_url?: string;
 }
 
 export interface CarInterior {
@@ -11,6 +11,7 @@ export interface CarInterior {
 export interface CarTrim {
   name: string;
   price: string;
+  specs?: Record<string, string>; // Added specs property as optional
 }
 
 export interface CarSpecs {
