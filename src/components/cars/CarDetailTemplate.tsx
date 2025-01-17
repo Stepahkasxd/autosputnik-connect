@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { Car } from "@/data/cars";
+import { Car, CarSpecs } from "@/data/cars";
 
 interface CarDetailTemplateProps {
   car: Car;
@@ -57,10 +57,6 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
     }
   }, [selectedColor, car.image, allImages]);
 
-  const handleBack = () => {
-    navigate(-1);
-  };
-
   const nextImage = () => {
     setCurrentImageIndex((prev) => {
       const newIndex = prev === allImages.length - 1 ? 0 : prev + 1;
@@ -78,8 +74,9 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
   };
 
   // Helper function to check if specs exist and have values
-  const hasSpecs = (specs: Record<string, string | undefined> | undefined): boolean => {
-    return specs !== undefined && Object.keys(specs).length > 0;
+  const hasSpecs = (specs: CarSpecs): boolean => {
+    if (!specs) return false;
+    return Object.values(specs).some(value => value !== undefined && value !== null);
   };
 
   return (
