@@ -27,6 +27,7 @@ export const CarSpecs = ({ specs }: CarSpecsProps) => {
     wheelbase: "Колесная база",
     consumption: "Расход энергии",
     trunk: "Объем багажника",
+    bodyType: "Тип кузова", // Added body type translation
   };
 
   return (
