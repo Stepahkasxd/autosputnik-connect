@@ -16,7 +16,7 @@ export const CarsManagement = () => {
     try {
       console.log("Adding new car:", { name, basePrice });
       
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("cars")
         .insert([
           {
@@ -24,12 +24,11 @@ export const CarsManagement = () => {
             base_price: basePrice,
             specs: {},
           },
-        ])
-        .select();
+        ]);
 
       if (error) throw error;
 
-      console.log("Car added successfully:", data);
+      console.log("Car added successfully");
       
       toast({
         title: "Успешно",
