@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { MessageSquare, Phone, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
@@ -23,14 +24,12 @@ export const OrderForm = ({ carName, selectedTrim, onClose }: OrderFormProps) =>
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedInterior, setSelectedInterior] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  // Fetch car details including colors and interiors
   const [carDetails, setCarDetails] = useState<{
     colors: { name: string; code: string }[];
     interiors: { name: string }[];
   }>({ colors: [], interiors: [] });
 
-  useState(() => {
+  useEffect(() => {
     const fetchCarDetails = async () => {
       try {
         const { data: colors } = await supabase

@@ -171,29 +171,38 @@ export type Database = {
       orders: {
         Row: {
           car_name: string
+          color: string | null
           contact_method: string
           created_at: string
           id: string
+          interior: string | null
           name: string
           phone: string
+          price: string | null
           trim_name: string | null
         }
         Insert: {
           car_name: string
+          color?: string | null
           contact_method: string
           created_at?: string
           id?: string
+          interior?: string | null
           name: string
           phone: string
+          price?: string | null
           trim_name?: string | null
         }
         Update: {
           car_name?: string
+          color?: string | null
           contact_method?: string
           created_at?: string
           id?: string
+          interior?: string | null
           name?: string
           phone?: string
+          price?: string | null
           trim_name?: string | null
         }
         Relationships: []
