@@ -16,6 +16,11 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
   const [selectedInterior, setSelectedInterior] = useState(car?.interiors[0]?.name);
   const [selectedTrim, setSelectedTrim] = useState(car?.trims[0]);
 
+  // Helper function to check if a spec exists and has a value
+  const hasSpec = (spec: string | undefined | null): boolean => {
+    return spec !== undefined && spec !== null && spec !== '';
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-up">
       {/* Left Column - Image and Colors */}
@@ -91,13 +96,14 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
           </RadioGroup>
         </Card>
 
+        {/* Dynamic Specifications Section */}
         <Card className="p-6 space-y-4 shadow-lg hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold">Характеристики</h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {car.specs.power && (
+            {hasSpec(car.specs.power) && (
               <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
                 <Zap className="w-5 h-5 text-primary" />
                 <div>
@@ -106,7 +112,7 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
                 </div>
               </div>
             )}
-            {car.specs.acceleration && (
+            {hasSpec(car.specs.acceleration) && (
               <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
                 <Timer className="w-5 h-5 text-primary" />
                 <div>
@@ -115,7 +121,7 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
                 </div>
               </div>
             )}
-            {car.specs.batteryCapacity && (
+            {hasSpec(car.specs.batteryCapacity) && (
               <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
                 <Battery className="w-5 h-5 text-primary" />
                 <div>
@@ -124,7 +130,7 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
                 </div>
               </div>
             )}
-            {car.specs.range && (
+            {hasSpec(car.specs.range) && (
               <div className="flex items-center gap-3 p-4 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors">
                 <Gauge className="w-5 h-5 text-primary" />
                 <div>
