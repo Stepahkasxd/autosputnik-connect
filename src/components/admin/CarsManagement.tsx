@@ -1,10 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Trash2, Car } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export const CarsManagement = () => {
   const [name, setName] = useState("");
@@ -14,6 +32,7 @@ export const CarsManagement = () => {
   const [acceleration, setAcceleration] = useState("");
   const [range, setRange] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [cars, setCars] = useState<any[]>([]);
   const { toast } = useToast();
 
   // Colors state
@@ -27,9 +46,26 @@ export const CarsManagement = () => {
   ]);
 
   // Interiors state
-  const [interiors, setInteriors] = useState<{ name: string }[]>([
-    { name: "" },
-  ]);
+  const [interiors, setInteriors] = useState<{ name: string }[]>([{ name: "" }]);
+
+  useEffect(() => {
+    fetchCars();
+  }, []);
+
+  const fetchCars = async () => {
+    try {
+      const { data, error } = await supabase.from("cars").select("*");
+      if (error) throw error;
+      setCars(data);
+    } catch (error) {
+      console.error("Error fetching cars:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить список автомобилей",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -77,6 +113,41 @@ export const CarsManagement = () => {
     const newInteriors = [...interiors];
     newInteriors[index].name = value;
     setInteriors(newInteriors);
+  };
+
+  const handleDelete = async (carId: string) => {
+    try {
+      setIsLoading(true);
+      
+      // Delete related records first
+      await Promise.all([
+        supabase.from("car_colors").delete().eq("car_id", carId),
+        supabase.from("car_trims").delete().eq("car_id", carId),
+        supabase.from("car_interiors").delete().eq("car_id", carId),
+      ]);
+
+      // Delete the car record
+      const { error } = await supabase.from("cars").delete().eq("id", carId);
+      
+      if (error) throw error;
+
+      toast({
+        title: "Успешно",
+        description: "Автомобиль успешно удален",
+      });
+
+      // Refresh the cars list
+      fetchCars();
+    } catch (error) {
+      console.error("Error deleting car:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось удалить автомобиль",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -217,184 +288,274 @@ export const CarsManagement = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Управление автомобилями</h2>
-        <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-          <div className="space-y-2">
-            <Label htmlFor="name">Название модели</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="Например: Zeekr 001"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="basePrice">Базовая цена</Label>
-            <Input
-              id="basePrice"
-              value={basePrice}
-              onChange={(e) => setBasePrice(e.target.value)}
-              required
-              placeholder="Например: от 5 990 000 ₽"
-            />
-          </div>
-
-          {/* Colors Section */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Label>Цвета</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addColor}>
-                <Plus className="w-4 h-4 mr-1" /> Добавить цвет
-              </Button>
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Existing Cars List */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Существующие модели</CardTitle>
+            <CardDescription>
+              Список всех добавленных автомобилей
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {cars.map((car) => (
+                <div
+                  key={car.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center space-x-4">
+                    <Car className="w-5 h-5 text-gray-500" />
+                    <div>
+                      <h3 className="font-medium">{car.name}</h3>
+                      <p className="text-sm text-gray-500">{car.base_price}</p>
+                    </div>
+                  </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Удалить автомобиль?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Это действие нельзя отменить. Автомобиль будет удален из базы данных.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Отмена</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleDelete(car.id)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          Удалить
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              ))}
             </div>
-            {colors.map((color, index) => (
-              <div key={index} className="flex gap-2 items-start">
-                <div className="flex-1">
-                  <Input
-                    value={color.name}
-                    onChange={(e) => updateColor(index, "name", e.target.value)}
-                    placeholder="Название цвета"
-                    required
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    type="color"
-                    value={color.code}
-                    onChange={(e) => updateColor(index, "code", e.target.value)}
-                    required
-                  />
-                </div>
-                {colors.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeColor(index)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Trims Section */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Label>Комплектации</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addTrim}>
-                <Plus className="w-4 h-4 mr-1" /> Добавить комплектацию
+        {/* Add New Car Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Добавить новую модель</CardTitle>
+            <CardDescription>
+              Заполните информацию о новом автомобиле
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="name">Название модели</Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    placeholder="Например: Zeekr 001"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="basePrice">Базовая цена</Label>
+                  <Input
+                    id="basePrice"
+                    value={basePrice}
+                    onChange={(e) => setBasePrice(e.target.value)}
+                    required
+                    placeholder="Например: от 5 990 000 ₽"
+                    className="mt-1"
+                  />
+                </div>
+
+                {/* Colors Section */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label>Цвета</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addColor}
+                    >
+                      <Plus className="w-4 h-4 mr-1" /> Добавить цвет
+                    </Button>
+                  </div>
+                  {colors.map((color, index) => (
+                    <div key={index} className="flex gap-2 items-start">
+                      <Input
+                        value={color.name}
+                        onChange={(e) =>
+                          updateColor(index, "name", e.target.value)
+                        }
+                        placeholder="Название цвета"
+                        required
+                      />
+                      <Input
+                        type="color"
+                        value={color.code}
+                        onChange={(e) =>
+                          updateColor(index, "code", e.target.value)
+                        }
+                        required
+                        className="w-20"
+                      />
+                      {colors.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeColor(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Trims Section */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label>Комплектации</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addTrim}
+                    >
+                      <Plus className="w-4 h-4 mr-1" /> Добавить комплектацию
+                    </Button>
+                  </div>
+                  {trims.map((trim, index) => (
+                    <div key={index} className="flex gap-2 items-start">
+                      <Input
+                        value={trim.name}
+                        onChange={(e) =>
+                          updateTrim(index, "name", e.target.value)
+                        }
+                        placeholder="Название комплектации"
+                        required
+                      />
+                      <Input
+                        value={trim.price}
+                        onChange={(e) =>
+                          updateTrim(index, "price", e.target.value)
+                        }
+                        placeholder="Цена"
+                        required
+                      />
+                      {trims.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeTrim(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Interiors Section */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <Label>Варианты салона</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addInterior}
+                    >
+                      <Plus className="w-4 h-4 mr-1" /> Добавить вариант салона
+                    </Button>
+                  </div>
+                  {interiors.map((interior, index) => (
+                    <div key={index} className="flex gap-2 items-start">
+                      <Input
+                        value={interior.name}
+                        onChange={(e) => updateInterior(index, e.target.value)}
+                        placeholder="Название варианта салона"
+                        required
+                      />
+                      {interiors.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeInterior(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div>
+                  <Label htmlFor="power">Мощность</Label>
+                  <Input
+                    id="power"
+                    value={power}
+                    onChange={(e) => setPower(e.target.value)}
+                    placeholder="Например: 400 кВт"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="acceleration">Разгон до 100 км/ч</Label>
+                  <Input
+                    id="acceleration"
+                    value={acceleration}
+                    onChange={(e) => setAcceleration(e.target.value)}
+                    placeholder="Например: 3,8 с"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="range">Запас хода</Label>
+                  <Input
+                    id="range"
+                    value={range}
+                    onChange={(e) => setRange(e.target.value)}
+                    placeholder="Например: 656 км"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="image">Изображение автомобиля</Label>
+                  <Input
+                    id="image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="cursor-pointer mt-1"
+                  />
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Добавление..." : "Добавить автомобиль"}
               </Button>
-            </div>
-            {trims.map((trim, index) => (
-              <div key={index} className="flex gap-2 items-start">
-                <div className="flex-1">
-                  <Input
-                    value={trim.name}
-                    onChange={(e) => updateTrim(index, "name", e.target.value)}
-                    placeholder="Название комплектации"
-                    required
-                  />
-                </div>
-                <div className="flex-1">
-                  <Input
-                    value={trim.price}
-                    onChange={(e) => updateTrim(index, "price", e.target.value)}
-                    placeholder="Цена"
-                    required
-                  />
-                </div>
-                {trims.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeTrim(index)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Interiors Section */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <Label>Варианты салона</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addInterior}>
-                <Plus className="w-4 h-4 mr-1" /> Добавить вариант салона
-              </Button>
-            </div>
-            {interiors.map((interior, index) => (
-              <div key={index} className="flex gap-2 items-start">
-                <div className="flex-1">
-                  <Input
-                    value={interior.name}
-                    onChange={(e) => updateInterior(index, e.target.value)}
-                    placeholder="Название варианта салона"
-                    required
-                  />
-                </div>
-                {interiors.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => removeInterior(index)}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="power">Мощность</Label>
-            <Input
-              id="power"
-              value={power}
-              onChange={(e) => setPower(e.target.value)}
-              placeholder="Например: 400 кВт"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="acceleration">Разгон до 100 км/ч</Label>
-            <Input
-              id="acceleration"
-              value={acceleration}
-              onChange={(e) => setAcceleration(e.target.value)}
-              placeholder="Например: 3,8 с"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="range">Запас хода</Label>
-            <Input
-              id="range"
-              value={range}
-              onChange={(e) => setRange(e.target.value)}
-              placeholder="Например: 656 км"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="image">Изображение автомобиля</Label>
-            <Input
-              id="image"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="cursor-pointer"
-            />
-          </div>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Добавление..." : "Добавить автомобиль"}
-          </Button>
-        </form>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
