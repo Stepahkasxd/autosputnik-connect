@@ -8,9 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 interface ImagesStepProps {
   onComplete: () => void;
   initialData: any;
+  isEditing?: boolean;
 }
 
-export const ImagesStep = ({ onComplete, initialData }: ImagesStepProps) => {
+export const ImagesStep = ({ onComplete, initialData, isEditing = false }: ImagesStepProps) => {
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [colorImages, setColorImages] = useState<{ [key: string]: File | null }>(
     initialData.colors.reduce((acc: any, color: any) => {
@@ -54,42 +55,63 @@ export const ImagesStep = ({ onComplete, initialData }: ImagesStepProps) => {
     setIsLoading(true);
 
     try {
-      // Upload main image
-      let mainImageUrl = null;
+      // Upload main image if changed
+      let mainImageUrl = initialData.image_url;
       if (mainImage) {
         mainImageUrl = await uploadImage(mainImage, 'car-images');
       }
 
-      // Add car to database
-      const { data: carData, error: carError } = await supabase
-        .from("cars")
-        .insert([
-          {
+      let carId = initialData.id;
+
+      if (isEditing) {
+        // Update existing car
+        const { error: carError } = await supabase
+          .from("cars")
+          .update({
             name: initialData.name,
             base_price: initialData.basePrice,
             image_url: mainImageUrl,
-            specs: {
-              power: initialData.power || undefined,
-              acceleration: initialData.acceleration || undefined,
-              range: initialData.range || undefined,
-            },
-          },
-        ])
-        .select()
-        .single();
+            specs: initialData.specs || {},
+          })
+          .eq('id', carId);
 
-      if (carError) throw carError;
+        if (carError) throw carError;
+
+        // Delete existing colors, trims, and interiors
+        await Promise.all([
+          supabase.from("car_colors").delete().eq("car_id", carId),
+          supabase.from("car_trims").delete().eq("car_id", carId),
+          supabase.from("car_interiors").delete().eq("car_id", carId),
+        ]);
+      } else {
+        // Add new car
+        const { data: carData, error: carError } = await supabase
+          .from("cars")
+          .insert([
+            {
+              name: initialData.name,
+              base_price: initialData.basePrice,
+              image_url: mainImageUrl,
+              specs: initialData.specs || {},
+            },
+          ])
+          .select()
+          .single();
+
+        if (carError) throw carError;
+        carId = carData.id;
+      }
 
       // Upload color images and add colors
       const colorPromises = initialData.colors.map(async (color: any) => {
         const colorImage = colorImages[color.name];
-        let imageUrl = null;
+        let imageUrl = color.image_url;
         if (colorImage) {
           imageUrl = await uploadImage(colorImage, 'car-color-images');
         }
 
         return supabase.from("car_colors").insert([{
-          car_id: carData.id,
+          car_id: carId,
           name: color.name,
           code: color.code,
           image_url: imageUrl,
@@ -104,7 +126,7 @@ export const ImagesStep = ({ onComplete, initialData }: ImagesStepProps) => {
           .from("car_trims")
           .insert(
             initialData.trims.map((trim: any) => ({
-              car_id: carData.id,
+              car_id: carId,
               name: trim.name,
               price: trim.price,
               specs: trim.specs || {},
@@ -118,7 +140,7 @@ export const ImagesStep = ({ onComplete, initialData }: ImagesStepProps) => {
           .from("car_interiors")
           .insert(
             initialData.interiors.map((interior: any) => ({
-              car_id: carData.id,
+              car_id: carId,
               name: interior.name,
             }))
           );
@@ -126,15 +148,15 @@ export const ImagesStep = ({ onComplete, initialData }: ImagesStepProps) => {
 
       toast({
         title: "Успешно",
-        description: "Автомобиль успешно добавлен",
+        description: isEditing ? "Автомобиль успешно обновлен" : "Автомобиль успешно добавлен",
       });
 
       onComplete();
     } catch (error) {
-      console.error("Error adding car:", error);
+      console.error("Error saving car:", error);
       toast({
         title: "Ошибка",
-        description: "Не удалось добавить автомобиль",
+        description: isEditing ? "Не удалось обновить автомобиль" : "Не удалось добавить автомобиль",
         variant: "destructive",
       });
     } finally {
@@ -147,6 +169,13 @@ export const ImagesStep = ({ onComplete, initialData }: ImagesStepProps) => {
       <div className="space-y-4">
         <div>
           <Label htmlFor="mainImage">Основное изображение автомобиля</Label>
+          {initialData.image_url && (
+            <img
+              src={initialData.image_url}
+              alt="Current main image"
+              className="w-32 h-32 object-cover rounded-lg mb-2"
+            />
+          )}
           <Input
             id="mainImage"
             type="file"
@@ -165,6 +194,13 @@ export const ImagesStep = ({ onComplete, initialData }: ImagesStepProps) => {
                 style={{ backgroundColor: color.code }}
               />
               <span className="min-w-[120px]">{color.name}</span>
+              {color.image_url && (
+                <img
+                  src={color.image_url}
+                  alt={`Current ${color.name} image`}
+                  className="w-16 h-16 object-cover rounded-lg"
+                />
+              )}
               <Input
                 type="file"
                 accept="image/*"
@@ -177,7 +213,7 @@ export const ImagesStep = ({ onComplete, initialData }: ImagesStepProps) => {
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Добавление..." : "Завершить"}
+        {isLoading ? (isEditing ? "Обновление..." : "Добавление...") : (isEditing ? "Обновить" : "Завершить")}
       </Button>
     </form>
   );
