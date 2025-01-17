@@ -5,8 +5,9 @@ import { Car } from "@/data/cars";
 import { OrderForm } from "./OrderForm";
 import { CarSpecs } from "./CarSpecs";
 import { TrimSelector } from "./TrimSelector";
-import { ArrowLeft, Send } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 interface CarDetailTemplateProps {
   car: Car;
@@ -14,7 +15,15 @@ interface CarDetailTemplateProps {
 
 const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
   const [selectedTrim, setSelectedTrim] = useState(car.trims[0]);
+  const [selectedColor, setSelectedColor] = useState(car.colors[0]);
+  const [selectedInterior, setSelectedInterior] = useState(car.interiors[0]);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
+
+  // Проверяем наличие данных
+  const hasColors = car.colors && car.colors.length > 0;
+  const hasInteriors = car.interiors && car.interiors.length > 0;
+  const hasTrims = car.trims && car.trims.length > 0;
+  const hasSpecs = car.specs && Object.keys(car.specs).length > 0;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -26,12 +35,48 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
 
       <div className="grid md:grid-cols-2 gap-8">
         {/* Left Column - Car Image */}
-        <div className="relative aspect-[16/9] rounded-lg overflow-hidden">
-          <img
-            src={car.image || "/placeholder.svg"}
-            alt={car.name}
-            className="w-full h-full object-cover"
-          />
+        <div className="space-y-8">
+          <div className="relative aspect-[16/9] rounded-lg overflow-hidden">
+            <img
+              src={car.image || "/placeholder.svg"}
+              alt={car.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Color Selection */}
+          {hasColors && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <span className="text-primary">✦</span> Цвета
+              </h2>
+              <div className="grid grid-cols-3 gap-4">
+                {car.colors.map((color) => (
+                  <button
+                    key={color.code}
+                    onClick={() => setSelectedColor(color)}
+                    className={cn(
+                      "relative p-4 rounded-lg border transition-all duration-200",
+                      selectedColor.code === color.code
+                        ? "border-primary"
+                        : "border-gray-800 hover:border-gray-700"
+                    )}
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-full border shadow-inner"
+                        style={{ backgroundColor: color.code }}
+                      />
+                      <span className="text-sm text-center">{color.name}</span>
+                    </div>
+                    {selectedColor.code === color.code && (
+                      <CheckCircle2 className="absolute top-2 right-2 w-4 h-4 text-primary" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Column - Car Details */}
@@ -53,14 +98,41 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
                 <OrderForm
                   carName={car.name}
                   selectedTrim={selectedTrim}
+                  selectedColor={selectedColor}
+                  selectedInterior={selectedInterior}
                   onClose={() => setIsOrderDialogOpen(false)}
                 />
               </DialogContent>
             </Dialog>
           </div>
 
+          {/* Interior Selection */}
+          {hasInteriors && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <span className="text-primary">✦</span> Варианты салона
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                {car.interiors.map((interior) => (
+                  <button
+                    key={interior.name}
+                    onClick={() => setSelectedInterior(interior)}
+                    className={cn(
+                      "p-4 rounded-lg border transition-all",
+                      selectedInterior.name === interior.name
+                        ? "border-primary bg-primary/5"
+                        : "border-gray-800 hover:border-gray-700"
+                    )}
+                  >
+                    {interior.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Trims */}
-          {car.trims && car.trims.length > 0 && (
+          {hasTrims && (
             <div className="space-y-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <span className="text-primary">✦</span> Комплектации
@@ -77,9 +149,7 @@ const CarDetailTemplate = ({ car }: CarDetailTemplateProps) => {
           )}
 
           {/* Specifications */}
-          {car.specs && Object.keys(car.specs).length > 0 && (
-            <CarSpecs specs={car.specs} />
-          )}
+          {hasSpecs && <CarSpecs specs={car.specs} />}
         </div>
       </div>
     </div>
