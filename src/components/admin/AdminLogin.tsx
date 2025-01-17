@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AuthError } from "@supabase/supabase-js";
 
 const ADMIN_USERNAME = "root";
 const ADMIN_PASSWORD = "ZZDXDX3DN1MM87IVH0QTYKJPC6160I5PQCZLP24ON96L9POOMW6XTP1L";
@@ -20,6 +21,8 @@ export const AdminLogin = () => {
       const { data: { session } } = await supabase.auth.getSession();
       const isAuthenticated = localStorage.getItem("isAdminAuthenticated");
       
+      console.log("Checking existing auth:", { session, isAuthenticated });
+      
       if (session && isAuthenticated) {
         navigate("/admin");
       }
@@ -28,27 +31,52 @@ export const AdminLogin = () => {
     checkAuth();
   }, [navigate]);
 
+  const handleAuthError = (error: AuthError) => {
+    console.error("Supabase auth error:", error);
+    let errorMessage = "Ошибка авторизации: ";
+    
+    if (error.message.includes("Invalid login credentials")) {
+      errorMessage += "Неверные учетные данные администратора в Supabase";
+    } else {
+      errorMessage += error.message;
+    }
+    
+    toast({
+      title: "Ошибка",
+      description: errorMessage,
+      variant: "destructive",
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        // First sign in with Supabase using email/password
-        const { error } = await supabase.auth.signInWithPassword({
-          email: "admin@example.com",
-          password: "admin123", // This should be a secure password in production
-        });
-
-        if (error) throw error;
-
-        localStorage.setItem("isAdminAuthenticated", "true");
-        navigate("/admin");
-      } else {
+      // First check admin credentials
+      if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
         throw new Error("Invalid credentials");
       }
+
+      console.log("Admin credentials valid, attempting Supabase login...");
+
+      // Then sign in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: "admin@example.com",
+        password: "admin123",
+      });
+
+      if (error) {
+        handleAuthError(error);
+        return;
+      }
+
+      console.log("Supabase login successful:", data);
+      localStorage.setItem("isAdminAuthenticated", "true");
+      navigate("/admin");
+      
     } catch (error) {
-      console.error("Error logging in:", error);
+      console.error("Login error:", error);
       toast({
         title: "Ошибка авторизации",
         description: "Неверный логин или пароль",
