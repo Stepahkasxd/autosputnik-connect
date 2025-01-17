@@ -1,11 +1,20 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface BasicInfoSectionProps {
-  selectedCar?: any;
+interface FormData {
+  name: string;
+  basePrice: string;
+  specs: any;
+  colors: any[];
+  trims: any[];
 }
 
-export const BasicInfoSection = ({ selectedCar }: BasicInfoSectionProps) => {
+interface BasicInfoSectionProps {
+  selectedCar?: any;
+  defaultValues?: FormData | null;
+}
+
+export const BasicInfoSection = ({ selectedCar, defaultValues }: BasicInfoSectionProps) => {
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="space-y-2">
@@ -13,7 +22,7 @@ export const BasicInfoSection = ({ selectedCar }: BasicInfoSectionProps) => {
         <Input 
           id="name" 
           name="name"
-          defaultValue={selectedCar?.name} 
+          defaultValue={selectedCar?.name || defaultValues?.name} 
           required 
           placeholder="Например: Zeekr 001"
         />
@@ -23,7 +32,7 @@ export const BasicInfoSection = ({ selectedCar }: BasicInfoSectionProps) => {
         <Input 
           id="price" 
           name="price"
-          defaultValue={selectedCar?.base_price} 
+          defaultValue={selectedCar?.base_price || defaultValues?.basePrice} 
           required 
           placeholder="Например: от 5 990 000 ₽"
         />

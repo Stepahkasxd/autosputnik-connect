@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { CarSpecs } from "@/data/cars";
@@ -28,18 +28,37 @@ interface TrimInput {
   specs: CarSpecs;
 }
 
+interface FormData {
+  name: string;
+  basePrice: string;
+  specs: CarSpecs;
+  colors: ColorInput[];
+  trims: TrimInput[];
+}
+
+const FORM_STORAGE_KEY = 'car-form-draft';
+
 const sanitizeFileName = (fileName: string): string => {
-  // Заменяем пробелы и специальные символы на безопасные
   return fileName
     .toLowerCase()
     .replace(/[^a-z0-9.]/g, '-')
     .replace(/-+/g, '-');
 };
 
+const getStoredFormData = (): FormData | null => {
+  const stored = localStorage.getItem(FORM_STORAGE_KEY);
+  return stored ? JSON.parse(stored) : null;
+};
+
+const clearStoredFormData = () => {
+  localStorage.removeItem(FORM_STORAGE_KEY);
+};
+
 export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
   const { toast } = useToast();
+  const [formKey, setFormKey] = useState(Date.now()); // Used to reset form fields
   const [specs, setSpecs] = useState<CarSpecs>(
-    selectedCar?.specs || {
+    selectedCar?.specs || getStoredFormData()?.specs || {
       acceleration: "",
       power: "",
       drive: "",
@@ -53,11 +72,13 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
 
   const [disabledSpecs, setDisabledSpecs] = useState<Record<string, boolean>>({});
   const [trimDisabledSpecs, setTrimDisabledSpecs] = useState<Record<string, Record<string, boolean>>>({});
-  const [colors, setColors] = useState<ColorInput[]>([{ name: "", code: "" }]);
-  const [trims, setTrims] = useState<TrimInput[]>([
-    { 
-      name: "", 
-      price: "", 
+  const [colors, setColors] = useState<ColorInput[]>(
+    selectedCar?.colors || getStoredFormData()?.colors || [{ name: "", code: "" }]
+  );
+  const [trims, setTrims] = useState<TrimInput[]>(
+    selectedCar?.trims || getStoredFormData()?.trims || [{
+      name: "",
+      price: "",
       specs: {
         acceleration: "",
         power: "",
@@ -68,8 +89,22 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
         wheelbase: "",
         additionalFeatures: [],
       }
+    }]
+  );
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    if (!selectedCar) { // Only save draft if we're creating a new car
+      const formData: FormData = {
+        name: (document.getElementById('name') as HTMLInputElement)?.value || '',
+        basePrice: (document.getElementById('price') as HTMLInputElement)?.value || '',
+        specs,
+        colors,
+        trims,
+      };
+      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formData));
     }
-  ]);
+  }, [specs, colors, trims, selectedCar]);
 
   const handleSpecChange = (field: keyof CarSpecs, value: string) => {
     setSpecs((prev) => ({
@@ -190,7 +225,6 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
         console.log("New car created with ID:", carId);
       }
 
-      if (carId) {
         if (selectedCar) {
           console.log("Deleting existing colors for car:", carId);
           await supabase
@@ -273,21 +307,8 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
             console.error("Error inserting trims:", trimsError);
           }
         }
-      }
 
-      const imageFile = formData.get("image") as File;
-      if (imageFile && imageFile.size > 0) {
-        const sanitizedFileName = sanitizeFileName(`${Date.now()}-${imageFile.name}`);
-        console.log("Uploading main car image:", sanitizedFileName);
-        const { error: mainImageError } = await supabase.storage
-          .from("car-images")
-          .upload(sanitizedFileName, imageFile);
-
-        if (mainImageError) {
-          console.error("Error uploading main image:", mainImageError);
-        }
-      }
-
+      clearStoredFormData(); // Clear stored form data after successful save
       toast({
         title: selectedCar ? "Автомобиль обновлен" : "Автомобиль добавлен",
         description: "Изменения успешно сохранены",
@@ -303,9 +324,26 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
     }
   };
 
+  const handleCancel = () => {
+    if (!selectedCar) {
+      const hasUnsavedChanges = localStorage.getItem(FORM_STORAGE_KEY) !== null;
+      if (hasUnsavedChanges) {
+        const confirmed = window.confirm("У вас есть несохраненные изменения. Вы уверены, что хотите закрыть форму?");
+        if (!confirmed) {
+          return;
+        }
+      }
+      clearStoredFormData();
+    }
+    onCancel();
+  };
+
   return (
-    <form onSubmit={handleSave} className="space-y-6">
-      <BasicInfoSection selectedCar={selectedCar} />
+    <form key={formKey} onSubmit={handleSave} className="space-y-6">
+      <BasicInfoSection 
+        selectedCar={selectedCar} 
+        defaultValues={getStoredFormData()}
+      />
       
       <ColorsSection 
         colors={colors}
@@ -329,7 +367,7 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
       </div>
 
       <div className="flex justify-end space-x-2 pt-4">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={handleCancel}>
           Отмена
         </Button>
         <Button type="submit">Сохранить</Button>
