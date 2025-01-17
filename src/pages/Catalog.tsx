@@ -2,17 +2,43 @@ import { Header } from "@/components/Header";
 import { CarCard } from "@/components/CarCard";
 import { useToast } from "@/components/ui/use-toast";
 import { useState, useEffect } from "react";
-import type { Car } from "@/data/cars";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+
+const fetchCars = async () => {
+  console.log("Fetching cars from Supabase...");
+  const { data, error } = await supabase
+    .from("cars")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching cars:", error);
+    throw error;
+  }
+
+  console.log("Fetched cars:", data);
+  return data;
+};
 
 const Catalog = () => {
   const { toast } = useToast();
-  const [cars, setCars] = useState<Car[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const { data: cars, isLoading, error } = useQuery({
+    queryKey: ["cars"],
+    queryFn: fetchCars,
+  });
 
   useEffect(() => {
-    setIsLoading(false);
-    setCars([]);
-  }, []);
+    if (error) {
+      console.error("Error in cars query:", error);
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить список автомобилей",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   return (
     <div className="min-h-screen">
@@ -29,15 +55,15 @@ const Catalog = () => {
                 />
               ))}
             </div>
-          ) : cars.length > 0 ? (
+          ) : cars && cars.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {cars.map((car) => (
                 <CarCard
                   key={car.id}
                   id={car.id}
                   name={car.name}
-                  price={car.basePrice}
-                  image={car.image}
+                  price={car.base_price}
+                  image={car.image_url || "/placeholder.svg"}
                 />
               ))}
             </div>
