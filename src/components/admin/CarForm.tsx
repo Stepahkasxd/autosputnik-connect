@@ -44,6 +44,7 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
   );
 
   const [disabledSpecs, setDisabledSpecs] = useState<Record<string, boolean>>({});
+  const [trimDisabledSpecs, setTrimDisabledSpecs] = useState<Record<string, Record<string, boolean>>>({});
   const [colors, setColors] = useState<ColorInput[]>([{ name: "", code: "" }]);
   const [trims, setTrims] = useState<TrimInput[]>([
     { 
@@ -145,6 +146,44 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
       }
       return trim;
     }));
+  };
+
+  const handleTrimSpecToggle = (trimIndex: number, field: string) => {
+    setTrimDisabledSpecs(prev => ({
+      ...prev,
+      [trimIndex]: {
+        ...(prev[trimIndex] || {}),
+        [field]: !(prev[trimIndex]?.[field] || false)
+      }
+    }));
+
+    if (!trimDisabledSpecs[trimIndex]?.[field]) {
+      setTrims(prev => prev.map((trim, i) => {
+        if (i === trimIndex) {
+          return {
+            ...trim,
+            specs: {
+              ...trim.specs,
+              [field]: "Не используется"
+            }
+          };
+        }
+        return trim;
+      }));
+    } else {
+      setTrims(prev => prev.map((trim, i) => {
+        if (i === trimIndex) {
+          return {
+            ...trim,
+            specs: {
+              ...trim.specs,
+              [field]: ""
+            }
+          };
+        }
+        return trim;
+      }));
+    }
   };
 
   const handleSave = async (event: React.FormEvent) => {
@@ -436,12 +475,25 @@ export const CarForm = ({ selectedCar, onSuccess, onCancel }: CarFormProps) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {specFields.map(({ key, label, placeholder }) => (
                     <div key={key} className="space-y-2">
-                      <Label htmlFor={`trim-${trimIndex}-${key}`}>{label}</Label>
+                      <div className="flex justify-between items-center">
+                        <Label htmlFor={`trim-${trimIndex}-${key}`}>{label}</Label>
+                        <div className="flex items-center space-x-2">
+                          <Label htmlFor={`toggle-trim-${trimIndex}-${key}`} className="text-sm text-gray-500">
+                            Не используется
+                          </Label>
+                          <Switch
+                            id={`toggle-trim-${trimIndex}-${key}`}
+                            checked={trimDisabledSpecs[trimIndex]?.[key] || false}
+                            onCheckedChange={() => handleTrimSpecToggle(trimIndex, key)}
+                          />
+                        </div>
+                      </div>
                       <Input
                         id={`trim-${trimIndex}-${key}`}
                         value={trim.specs[key as keyof CarSpecs] as string}
                         onChange={(e) => handleTrimSpecChange(trimIndex, key as keyof CarSpecs, e.target.value)}
                         placeholder={placeholder}
+                        disabled={trimDisabledSpecs[trimIndex]?.[key]}
                       />
                     </div>
                   ))}
