@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ContactSubmissions } from "@/components/admin/ContactSubmissions";
 import { SupportTickets } from "@/components/admin/SupportTickets";
 import { CarsManagement } from "@/components/admin/CarsManagement";
+import { Orders } from "@/components/admin/Orders";
 import { Header } from "@/components/Header";
 
 const Admin = () => {
@@ -17,12 +18,17 @@ const Admin = () => {
         <Tabs defaultValue="contacts" className="w-full">
           <TabsList className="mb-8 bg-card/50 dark:bg-card/40">
             <TabsTrigger value="contacts">Заявки</TabsTrigger>
+            <TabsTrigger value="orders">Заказы</TabsTrigger>
             <TabsTrigger value="support">Тех. поддержка</TabsTrigger>
             <TabsTrigger value="cars">Автомобили</TabsTrigger>
           </TabsList>
           
           <TabsContent value="contacts">
             <ContactSubmissions />
+          </TabsContent>
+
+          <TabsContent value="orders">
+            <Orders />
           </TabsContent>
 
           <TabsContent value="support">

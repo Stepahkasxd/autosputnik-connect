@@ -24,19 +24,19 @@ export const OrderForm = ({ carName, selectedTrim, onClose }: OrderFormProps) =>
     e.preventDefault();
     try {
       const { error } = await supabase
-        .from('contact_submissions')
+        .from('orders')
         .insert([{
           name: orderForm.name,
           phone: orderForm.phone,
           contact_method: orderForm.contactMethod,
-          car_preferences: `${carName} - ${selectedTrim?.name || 'Base model'}`,
-          timing: new Date().toISOString().split('T')[0]
+          car_name: carName,
+          trim_name: selectedTrim?.name || null,
         }]);
 
       if (error) throw error;
 
       toast({
-        title: "Заявка отправлена",
+        title: "Заказ отправлен",
         description: "Мы свяжемся с вами в ближайшее время",
       });
       
@@ -47,10 +47,10 @@ export const OrderForm = ({ carName, selectedTrim, onClose }: OrderFormProps) =>
         contactMethod: "whatsapp"
       });
     } catch (error) {
-      console.error('Error submitting form:', error);
+      console.error('Error submitting order:', error);
       toast({
         title: "Ошибка",
-        description: "Не удалось отправить заявку. Пожалуйста, попробуйте позже.",
+        description: "Не удалось отправить заказ. Пожалуйста, попробуйте позже.",
         variant: "destructive"
       });
     }
