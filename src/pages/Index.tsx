@@ -1,107 +1,54 @@
-import { useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { ContactForm } from "@/components/ContactForm";
-import { CarCard } from "@/components/CarCard";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
-import type { Car } from "@/data/cars";
 
 const Index = () => {
-  const { toast } = useToast();
-  const [cars, setCars] = useState<Car[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const convertDbCarToCar = (dbCar: any): Car => {
-    return {
-      id: dbCar.id,
-      name: dbCar.name,
-      basePrice: dbCar.base_price,
-      image: dbCar.image_url || "/placeholder.svg",
-      specs: dbCar.specs,
-      colors: [],
-      interiors: [],
-      trims: []
-    };
-  };
-
-  useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("cars")
-          .select("*")
-          .order("name");
-
-        if (error) {
-          throw error;
-        }
-
-        if (data) {
-          const convertedCars = data.map(convertDbCarToCar);
-          setCars(convertedCars);
-        }
-      } catch (error) {
-        console.error("Error fetching cars:", error);
-        toast({
-          title: "Ошибка",
-          description: "Не удалось загрузить список автомобилей",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchCars();
-  }, [toast]);
-
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
       <Header />
       
       <main className="container mx-auto px-4 pt-24">
         {/* Hero Section */}
         <section className="py-12 md:py-20">
           <div className="max-w-4xl mx-auto text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 fade-up">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 fade-up bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
               Найдите свой идеальный автомобиль
             </h1>
             <p className="text-xl text-gray-600 fade-up animation-delay-100">
               Подберем автомобиль на любой вкус и бюджет
             </p>
           </div>
-          <ContactForm />
-        </section>
 
-        {/* Car Catalog Section */}
-        <section className="py-12">
-          <h2 className="text-3xl font-bold mb-8 text-center">Каталог автомобилей</h2>
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((n) => (
-                <div 
-                  key={n} 
-                  className="h-[300px] rounded-lg bg-gray-100 animate-pulse"
-                />
-              ))}
+          <div className="grid md:grid-cols-2 gap-8 items-center mb-12">
+            <div className="space-y-6 fade-up">
+              <div className="glass-card p-6 rounded-lg">
+                <h2 className="text-2xl font-semibold mb-4">Почему мы?</h2>
+                <ul className="space-y-4">
+                  <li className="flex items-center space-x-3">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                    <span>Индивидуальный подход к каждому клиенту</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <span className="w-2 h-2 bg-pink-500 rounded-full"></span>
+                    <span>Большой выбор автомобилей</span>
+                  </li>
+                  <li className="flex items-center space-x-3">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                    <span>Помощь в оформлении документов</span>
+                  </li>
+                </ul>
+              </div>
             </div>
-          ) : cars.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {cars.map((car) => (
-                <CarCard
-                  key={car.id}
-                  id={car.id}
-                  name={car.name}
-                  price={car.basePrice}
-                  image={car.image}
-                />
-              ))}
+            <div className="relative fade-up animation-delay-200">
+              <img
+                src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e"
+                alt="Modern car showroom"
+                className="rounded-lg shadow-xl"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-lg"></div>
             </div>
-          ) : (
-            <p className="text-center text-gray-500">
-              Автомобили пока не добавлены
-            </p>
-          )}
+          </div>
+
+          <ContactForm />
         </section>
       </main>
     </div>

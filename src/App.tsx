@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Services from "./pages/Services";
+import Catalog from "./pages/Catalog";
 import CarDetail from "./pages/CarDetail";
 import Admin from "./pages/Admin";
 import AdminLogin from "./components/admin/AdminLogin";
@@ -20,6 +21,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/catalog" element={<Catalog />} />
             <Route path="/car/:id" element={<CarDetail />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route 
