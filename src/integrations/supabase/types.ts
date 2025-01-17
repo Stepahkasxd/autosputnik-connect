@@ -168,6 +168,36 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          car_name: string
+          contact_method: string
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          trim_name: string | null
+        }
+        Insert: {
+          car_name: string
+          contact_method: string
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+          trim_name?: string | null
+        }
+        Update: {
+          car_name?: string
+          contact_method?: string
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          trim_name?: string | null
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           created_at: string
