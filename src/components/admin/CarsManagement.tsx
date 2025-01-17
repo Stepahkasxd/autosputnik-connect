@@ -9,6 +9,9 @@ export const CarsManagement = () => {
   const [name, setName] = useState("");
   const [basePrice, setBasePrice] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [power, setPower] = useState("");
+  const [acceleration, setAcceleration] = useState("");
+  const [range, setRange] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -55,8 +58,15 @@ export const CarsManagement = () => {
         console.log("Image uploaded successfully:", imageUrl);
       }
 
+      // Prepare specifications object
+      const specs = {
+        power: power || undefined,
+        acceleration: acceleration || undefined,
+        range: range || undefined,
+      };
+
       // Add car to database
-      console.log("Adding car to database:", { name, basePrice, imageUrl });
+      console.log("Adding car to database:", { name, basePrice, imageUrl, specs });
       const { error: insertError } = await supabase
         .from("cars")
         .insert([
@@ -64,7 +74,7 @@ export const CarsManagement = () => {
             name,
             base_price: basePrice,
             image_url: imageUrl,
-            specs: {},
+            specs,
           },
         ]);
 
@@ -81,6 +91,9 @@ export const CarsManagement = () => {
       setName("");
       setBasePrice("");
       setImage(null);
+      setPower("");
+      setAcceleration("");
+      setRange("");
       if (e.target instanceof HTMLFormElement) {
         e.target.reset();
       }
@@ -119,6 +132,33 @@ export const CarsManagement = () => {
               onChange={(e) => setBasePrice(e.target.value)}
               required
               placeholder="Например: от 5 990 000 ₽"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="power">Мощность</Label>
+            <Input
+              id="power"
+              value={power}
+              onChange={(e) => setPower(e.target.value)}
+              placeholder="Например: 400 кВт"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="acceleration">Разгон до 100 км/ч</Label>
+            <Input
+              id="acceleration"
+              value={acceleration}
+              onChange={(e) => setAcceleration(e.target.value)}
+              placeholder="Например: 3,8 с"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="range">Запас хода</Label>
+            <Input
+              id="range"
+              value={range}
+              onChange={(e) => setRange(e.target.value)}
+              placeholder="Например: 656 км"
             />
           </div>
           <div className="space-y-2">
