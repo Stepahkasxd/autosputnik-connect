@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, X } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 interface BasicInfoStepProps {
   onComplete: (data: any) => void;
@@ -13,7 +14,9 @@ interface BasicInfoStepProps {
 export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) => {
   const [name, setName] = useState(initialData.name);
   const [basePrice, setBasePrice] = useState(initialData.basePrice);
-  const [specs, setSpecs] = useState<{ key: string; value: string }[]>([]);
+  const [trims, setTrims] = useState([
+    { name: "", price: "", specs: {} as Record<string, string> },
+  ]);
 
   // Список доступных характеристик
   const availableSpecs = [
@@ -29,35 +32,72 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
     "Масса",
   ];
 
-  const addSpec = () => {
-    setSpecs([...specs, { key: "", value: "" }]);
+  const addTrim = () => {
+    setTrims([...trims, { name: "", price: "", specs: {} }]);
   };
 
-  const removeSpec = (index: number) => {
-    setSpecs(specs.filter((_, i) => i !== index));
+  const removeTrim = (index: number) => {
+    setTrims(trims.filter((_, i) => i !== index));
   };
 
-  const updateSpec = (index: number, field: "key" | "value", value: string) => {
-    const newSpecs = [...specs];
-    newSpecs[index][field] = value;
-    setSpecs(newSpecs);
+  const updateTrim = (index: number, field: string, value: string) => {
+    const newTrims = [...trims];
+    newTrims[index] = { ...newTrims[index], [field]: value };
+    setTrims(newTrims);
+  };
+
+  const addSpecToTrim = (trimIndex: number) => {
+    const newTrims = [...trims];
+    const currentSpecs = newTrims[trimIndex].specs;
+    const availableSpecsForTrim = availableSpecs.filter(
+      (spec) => !Object.keys(currentSpecs).includes(spec)
+    );
+    
+    if (availableSpecsForTrim.length > 0) {
+      const newSpec = availableSpecsForTrim[0];
+      newTrims[trimIndex].specs = {
+        ...currentSpecs,
+        [newSpec]: "",
+      };
+      setTrims(newTrims);
+    }
+  };
+
+  const removeSpecFromTrim = (trimIndex: number, specKey: string) => {
+    const newTrims = [...trims];
+    const { [specKey]: _, ...remainingSpecs } = newTrims[trimIndex].specs;
+    newTrims[trimIndex].specs = remainingSpecs;
+    setTrims(newTrims);
+  };
+
+  const updateTrimSpec = (trimIndex: number, specKey: string, value: string) => {
+    const newTrims = [...trims];
+    newTrims[trimIndex].specs = {
+      ...newTrims[trimIndex].specs,
+      [specKey]: value,
+    };
+    setTrims(newTrims);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Преобразуем массив specs в объект для сохранения
-    const specsObject = specs.reduce((acc, spec) => {
-      if (spec.key && spec.value) {
-        acc[spec.key] = spec.value;
-      }
-      return acc;
-    }, {} as Record<string, string>);
+    // Validate that all trims have required fields
+    const isValid = trims.every(trim => 
+      trim.name && 
+      trim.price && 
+      Object.entries(trim.specs).every(([_, value]) => value)
+    );
+
+    if (!isValid) {
+      alert("Пожалуйста, заполните все поля комплектаций");
+      return;
+    }
 
     onComplete({
       name,
       basePrice,
-      specs: specsObject,
+      trims,
     });
   };
 
@@ -86,48 +126,107 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
           />
         </div>
 
-        <div className="space-y-4">
+        <Separator className="my-6" />
+
+        <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <Label>Характеристики</Label>
-            <Button type="button" variant="outline" size="sm" onClick={addSpec}>
-              <Plus className="w-4 h-4 mr-1" /> Добавить характеристику
+            <Label>Комплектации</Label>
+            <Button type="button" variant="outline" size="sm" onClick={addTrim}>
+              <Plus className="w-4 h-4 mr-1" /> Добавить комплектацию
             </Button>
           </div>
-          {specs.map((spec, index) => (
-            <div key={index} className="flex gap-2 items-start">
-              <Select
-                value={spec.key}
-                onValueChange={(value) => updateSpec(index, "key", value)}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Выберите характеристику" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableSpecs
-                    .filter((specName) => 
-                      !specs.some((s, i) => i !== index && s.key === specName)
-                    )
-                    .map((specName) => (
-                      <SelectItem key={specName} value={specName}>
-                        {specName}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <Input
-                value={spec.value}
-                onChange={(e) => updateSpec(index, "value", e.target.value)}
-                placeholder="Значение"
-                required={!!spec.key}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeSpec(index)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
+
+          {trims.map((trim, trimIndex) => (
+            <div key={trimIndex} className="space-y-4 p-4 border rounded-lg">
+              <div className="flex justify-between items-start gap-4">
+                <div className="flex-1">
+                  <Label>Название комплектации</Label>
+                  <Input
+                    value={trim.name}
+                    onChange={(e) => updateTrim(trimIndex, "name", e.target.value)}
+                    placeholder="Например: Base"
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label>Цена комплектации</Label>
+                  <Input
+                    value={trim.price}
+                    onChange={(e) => updateTrim(trimIndex, "price", e.target.value)}
+                    placeholder="Например: 5 990 000 ₽"
+                    required
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeTrim(trimIndex)}
+                  className="mt-6"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <Label>Характеристики комплектации</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addSpecToTrim(trimIndex)}
+                    disabled={Object.keys(trim.specs).length === availableSpecs.length}
+                  >
+                    <Plus className="w-4 h-4 mr-1" /> Добавить характеристику
+                  </Button>
+                </div>
+
+                {Object.entries(trim.specs).map(([specKey, specValue]) => (
+                  <div key={specKey} className="flex gap-2 items-start">
+                    <Select
+                      value={specKey}
+                      onValueChange={(value) => {
+                        const oldValue = trim.specs[specKey];
+                        removeSpecFromTrim(trimIndex, specKey);
+                        const newTrims = [...trims];
+                        newTrims[trimIndex].specs = {
+                          ...newTrims[trimIndex].specs,
+                          [value]: oldValue,
+                        };
+                        setTrims(newTrims);
+                      }}
+                    >
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="Выберите характеристику" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[specKey, ...availableSpecs.filter(
+                          (spec) => !Object.keys(trim.specs).includes(spec)
+                        )].map((spec) => (
+                          <SelectItem key={spec} value={spec}>
+                            {spec}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      value={specValue}
+                      onChange={(e) => updateTrimSpec(trimIndex, specKey, e.target.value)}
+                      placeholder="Значение"
+                      required
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeSpecFromTrim(trimIndex, specKey)}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
