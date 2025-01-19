@@ -9,7 +9,6 @@ export const Header = () => {
   const menuItems = [
     { title: "Каталог автомобилей", path: "/catalog" },
     { title: "Подбор автомобиля", path: "/selection" },
-    { title: "Услуги", path: "/services" },
     { title: "Техподдержка", path: "/support" },
   ];
 
