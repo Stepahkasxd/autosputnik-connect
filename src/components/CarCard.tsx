@@ -2,13 +2,14 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { CarFront } from "lucide-react";
+import { Json } from "@/integrations/supabase/types";
 
 interface CarCardProps {
   id: string;
   name: string;
   price: string;
   image?: string;
-  specs: Record<string, string>;
+  specs: Json;
   trims?: Array<{
     name: string;
     price: string;
