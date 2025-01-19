@@ -157,21 +157,10 @@ const Index = () => {
               }`}
             >
               <div className="glass-card p-6 md:p-8 rounded-lg">
-                <h2 className="text-2xl md:text-3xl font-semibold mb-4">Почему мы?</h2>
-                <ul className="space-y-4">
-                  <li className="flex items-center space-x-3">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></span>
-                    <span className="text-base md:text-lg">Индивидуальный подход к каждому клиенту</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <span className="w-2 h-2 bg-pink-500 rounded-full flex-shrink-0"></span>
-                    <span className="text-base md:text-lg">Большой выбор автомобилей</span>
-                  </li>
-                  <li className="flex items-center space-x-3">
-                    <span className="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></span>
-                    <span className="text-base md:text-lg">Помощь в оформлении документов</span>
-                  </li>
-                </ul>
+                <h2 className="text-2xl md:text-3xl font-semibold mb-4">Найдите свой идеальный автомобиль</h2>
+                <p className="text-base md:text-lg text-muted-foreground">
+                  Мы поможем вам подобрать автомобиль, который идеально подойдет под ваши потребности и бюджет. Наши специалисты проконсультируют вас по всем вопросам и помогут с оформлением документов.
+                </p>
               </div>
             </div>
             <div 
