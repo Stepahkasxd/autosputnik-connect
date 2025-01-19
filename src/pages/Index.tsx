@@ -12,7 +12,11 @@ import {
   FileText,
   Globe,
   PaintBucket,
-  Settings
+  Settings,
+  Users2,
+  Award,
+  Star,
+  ThumbsUp
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -100,7 +104,7 @@ const Index = () => {
 
   const stats = [
     {
-      icon: <Users className="w-8 h-8 text-purple-500" />,
+      icon: <Users2 className="w-8 h-8 text-purple-500" />,
       value: "500+",
       label: "Довольных клиентов",
       description: "Которые уже ездят на своих новых автомобилях"
