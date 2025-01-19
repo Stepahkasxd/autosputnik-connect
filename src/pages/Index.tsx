@@ -13,8 +13,10 @@ import {
   Globe,
   PaintBucket,
   Settings,
-  Headphones,
-  Calculator
+  Award,
+  Users,
+  ThumbsUp,
+  Star
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -28,6 +30,7 @@ const Index = () => {
   const [carsRef, carsInView] = useInView({ triggerOnce: true, threshold: 0.1 });
   const [advantagesRef, advantagesInView] = useInView({ triggerOnce: true, threshold: 0.1 });
   const [servicesRef, servicesInView] = useInView({ triggerOnce: true, threshold: 0.1 });
+  const [statsRef, statsInView] = useInView({ triggerOnce: true, threshold: 0.1 });
 
   const { data: popularCars } = useQuery({
     queryKey: ['popularCars'],
@@ -99,6 +102,33 @@ const Index = () => {
     }
   ];
 
+  const stats = [
+    {
+      icon: <Users className="w-8 h-8 text-purple-500" />,
+      value: "500+",
+      label: "Довольных клиентов",
+      description: "Которые уже ездят на своих новых автомобилях"
+    },
+    {
+      icon: <Award className="w-8 h-8 text-pink-500" />,
+      value: "5",
+      label: "Лет на рынке",
+      description: "Профессиональной работы с китайскими брендами"
+    },
+    {
+      icon: <Star className="w-8 h-8 text-purple-500" />,
+      value: "4.9",
+      label: "Средняя оценка",
+      description: "По отзывам наших клиентов"
+    },
+    {
+      icon: <ThumbsUp className="w-8 h-8 text-pink-500" />,
+      value: "98%",
+      label: "Клиентов рекомендуют",
+      description: "Нас своим друзьям и знакомым"
+    }
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-background/80 dark:from-background dark:to-background/50">
       <Header />
@@ -152,6 +182,50 @@ const Index = () => {
             >
               <ContactForm />
             </div>
+          </div>
+        </section>
+
+        {/* Why Us Section with Stats */}
+        <section 
+          ref={statsRef}
+          className={`py-12 transition-all duration-700 ${
+            statsInView ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          }`}
+        >
+          <div className="text-center mb-8 md:mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Почему выбирают нас</h2>
+            <p className="text-base md:text-lg text-muted-foreground">
+              Мы гордимся нашими достижениями и доверием клиентов
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+            {stats.map((stat, index) => (
+              <Card 
+                key={index}
+                className={`text-center p-6 glass-card transition-all duration-700 ${
+                  statsInView 
+                    ? 'opacity-100 translate-y-0' 
+                    : 'opacity-0 translate-y-10'
+                }`}
+                style={{ transitionDelay: `${index * 200}ms` }}
+              >
+                <CardContent className="pt-6">
+                  <div className="mb-4 flex justify-center">
+                    {stat.icon}
+                  </div>
+                  <div className="text-3xl md:text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600">
+                    {stat.value}
+                  </div>
+                  <h3 className="text-lg md:text-xl font-semibold mb-2">
+                    {stat.label}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {stat.description}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </section>
 
