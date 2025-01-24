@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Image } from "lucide-react";
 
 interface ImagesStepProps {
   onComplete: () => void;
@@ -14,10 +15,10 @@ interface ImagesStepProps {
 export const ImagesStep = ({ onComplete, initialData, isEditing = false }: ImagesStepProps) => {
   const [mainImage, setMainImage] = useState<File | null>(null);
   const [colorImages, setColorImages] = useState<{ [key: string]: File | null }>(
-    initialData.colors.reduce((acc: any, color: any) => {
+    initialData.colors?.reduce((acc: any, color: any) => {
       acc[color.name] = null;
       return acc;
-    }, {})
+    }, {}) || {}
   );
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -170,11 +171,13 @@ export const ImagesStep = ({ onComplete, initialData, isEditing = false }: Image
         <div>
           <Label htmlFor="mainImage">Основное изображение автомобиля</Label>
           {initialData.image_url && (
-            <img
-              src={initialData.image_url}
-              alt="Current main image"
-              className="w-32 h-32 object-cover rounded-lg mb-2"
-            />
+            <div className="relative w-32 h-32 mb-2 rounded-lg overflow-hidden">
+              <img
+                src={initialData.image_url}
+                alt="Current main image"
+                className="w-full h-full object-cover"
+              />
+            </div>
           )}
           <Input
             id="mainImage"
@@ -187,7 +190,7 @@ export const ImagesStep = ({ onComplete, initialData, isEditing = false }: Image
 
         <div className="space-y-4">
           <Label>Изображения для цветов</Label>
-          {initialData.colors.map((color: any) => (
+          {initialData.colors?.map((color: any) => (
             <div key={color.name} className="flex items-center gap-4">
               <div
                 className="w-6 h-6 rounded-full"
@@ -195,11 +198,13 @@ export const ImagesStep = ({ onComplete, initialData, isEditing = false }: Image
               />
               <span className="min-w-[120px]">{color.name}</span>
               {color.image_url && (
-                <img
-                  src={color.image_url}
-                  alt={`Current ${color.name} image`}
-                  className="w-16 h-16 object-cover rounded-lg"
-                />
+                <div className="relative w-16 h-16 rounded-lg overflow-hidden">
+                  <img
+                    src={color.image_url}
+                    alt={`Current ${color.name} image`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               )}
               <Input
                 type="file"

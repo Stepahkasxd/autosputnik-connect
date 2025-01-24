@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,15 +13,37 @@ interface BasicInfoStepProps {
   isEditing?: boolean;
 }
 
-export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) => {
-  const [name, setName] = useState(initialData.name);
-  const [basePrice, setBasePrice] = useState(initialData.basePrice);
-  const [baseSpecs, setBaseSpecs] = useState<Record<string, string>>({});
-  const [trims, setTrims] = useState([
-    { name: "", price: "", specs: {} as Record<string, string> },
-  ]);
+export const BasicInfoStep = ({ onComplete, initialData, isEditing }: BasicInfoStepProps) => {
+  const [name, setName] = useState(initialData.name || "");
+  const [basePrice, setBasePrice] = useState(initialData.basePrice || initialData.base_price || "");
+  const [baseSpecs, setBaseSpecs] = useState<Record<string, string>>(initialData.specs || {});
+  const [trims, setTrims] = useState(
+    initialData.trims?.length > 0
+      ? initialData.trims.map((trim: any) => ({
+          name: trim.name || "",
+          price: trim.price || "",
+          specs: trim.specs || {},
+        }))
+      : [{ name: "", price: "", specs: {} as Record<string, string> }]
+  );
 
-  // Список доступных характеристик
+  useEffect(() => {
+    if (isEditing && initialData) {
+      setName(initialData.name || "");
+      setBasePrice(initialData.basePrice || initialData.base_price || "");
+      setBaseSpecs(initialData.specs || {});
+      setTrims(
+        initialData.trims?.length > 0
+          ? initialData.trims.map((trim: any) => ({
+              name: trim.name || "",
+              price: trim.price || "",
+              specs: trim.specs || {},
+            }))
+          : [{ name: "", price: "", specs: {} as Record<string, string> }]
+      );
+    }
+  }, [isEditing, initialData]);
+
   const availableSpecs = [
     "Мощность",
     "Разгон до 100 км/ч",
@@ -33,7 +55,7 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
     "Клиренс",
     "Колесная база",
     "Масса",
-    "Тип кузова", // Added new body type characteristic
+    "Тип кузова",
   ];
 
   const addTrim = () => {
@@ -112,7 +134,6 @@ export const BasicInfoStep = ({ onComplete, initialData }: BasicInfoStepProps) =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate that all trims have required fields
     const isValid = trims.every(trim => 
       trim.name && 
       trim.price && 
